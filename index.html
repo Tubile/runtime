@@ -1,22 +1,1200 @@
 <!-- RUNTIME SKELETON (EN) -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
-body{margin:0;background:#0b1020;color:#e8ecf4;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+body{margin:0;background:#0b1020;color:#e8ecf4;font-family:'Assistant',system-ui,Segoe UI,Roboto,Helvetica,Arial}
+.progress{margin-top:10px;height:8px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.progress__bar{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#a78bfa);transition:width .08s linear}
+.sub{margin:0 0 12px;color:#9aa3b2;font-size:14px}
 .stage{min-height:100vh;display:flex;align-items:center;justify-content:center}
-.phone{width:360px;height:640px;border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#0f152a}
-@media (max-width:420px){.phone{width:320px;height:568px}}
-
+.phone{
+  width:min(420px, 92vw);
+  height:calc(min(420px, 92vw) * 1.78); /* יחס נעים ~16:9 */
+  border-radius:28px;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+  background:#0f152a;
+  display:flex;               /* חשוב: מאפשר לילד למלא גובה */
+  flex-direction:column;      /* כותרת סטטוס למעלה, תוכן מתחת */
+}
+@media (max-width: 480px){
+  .stage{ min-height:100svh; align-items:stretch; justify-content:stretch; }
+  .phone{ width:100vw; height:100svh; border-radius:0; border:0; box-shadow:none; }
+  .wrap{ padding:clamp(16px,4vw,24px); }
+}
+  
 /* status bar (preview-only) */
 .status{height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;
 font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.06),rgba(255,255,255,.09))}
 .status .dots{display:flex;gap:4px}
 .status .dot{width:6px;height:6px;border-radius:50%;background:#aeb7c8;opacity:.85}
-.wrap{padding:16px}
+.wrap{
+  padding:16px;
+  flex:1;                           /* ימלא את כל גובה ה"טלפון" */
+  overflow:auto;                     /* כאן הגלילה מתבצעת */
+  -webkit-overflow-scrolling: touch; /* אינרציה חלקה באייפון */
+  overscroll-behavior: contain;      /* לא מושך את העמוד שמסביב */
+}
 .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px}
 .h1{font-size:22px;font-weight:800;margin:0 0 6px}
 .p{margin:0 0 10px;color:#9aa3b2}
-.btn{appearance:none;border:0;border-radius:12px;padding:12px 14px;font-weight:800;cursor:pointer}
+.btn{appearance:none;border:0;border-radius:0px;padding:12px 14px;font-weight:700;cursor:pointer}
 .btn-primary{background:linear-gradient(90deg,#34d399,#10b981);color:#062d24}
 .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#1d243d;border:1px solid rgba(255,255,255,.08);font-size:12px;color:#9aa3b2;margin-bottom:10px}
+/* Infinite: inline percent inside the button + canvas confetti */
+.btn{position:relative}
+.btn .label{pointer-events:none}
+.btn .percent{position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:12px; opacity:.9}
+
+/* earned is hidden by default */
+.earned{display:none}
+
+/* gentle shake */
+@keyframes infShake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+.shake{animation:infShake .35s linear 1}
+
+/* confetti canvas */
+.confetti-canvas{position:fixed; inset:0; pointer-events:none; z-index:999}
+.confetti-canvas{ width:100vw; height:100vh }
+  /* Kefpo brand badge (runtime-only) */
+.kf-badge{
+  position: sticky;         /* נדבק לראש אזור הגלילה של .wrap */
+  top: 8px;
+  align-self: center;
+  display: inline-flex; gap: 8px; align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  color: #9aa3b2; font-size: 12px; font-weight: 800;
+  text-decoration: none;
+  z-index: 5;
+}
+.kf-badge:hover{ border-color: rgba(255,255,255,.18); transform: translateY(-1px); }
+.kf-badge i{ width: 8px; height: 8px; border-radius: 50%;
+  background: linear-gradient(90deg,#60a5fa,#a78bfa);
+  box-shadow: 0 0 10px rgba(167,139,250,.6);
+}
+  /* Custom scrollbar for touch devices (mobile only) */
+@media (hover:none) and (pointer:coarse){
+  .custom-scrollbar{
+    position:absolute; top:10px; bottom:10px; right:6px;
+    width:3px; border-radius:999px;
+    background:rgba(255,255,255,.08);   /* מסילה דקה וסטטית */
+    pointer-events:none;                 /* לא חוסם נגיעות בתוכן */
+    display:none;                        /* יוצג רק כשיש מה לגלול */
+  }
+  .custom-scrollbar .thumb{
+    position:absolute; left:0; top:0; width:100%;
+    height:36px; border-radius:999px;
+    background:rgba(255,255,255,.50);   /* האגודל */
+    opacity:0; transition:opacity .25s;
+  }
+  .wrap.scrolling .custom-scrollbar .thumb{ opacity:.9; }  /* מודגש בזמן גלילה */
+}
+</style>
+
+<!-- Infinite UX extra classes -->
+<style id="infinite-ux">
+/* מצבי צבע לכפתור (מעבר בין שלבים) */
+.btn.alt1{background:#7c3aed;color:#fff}
+.btn.alt2{background:#0ea5e9;color:#fff}
+.btn.success{background:#10b981;color:#fff}
+
+/* אפקטים עדינים לרקע הכרטיס */
+.wrap.fx-alert{animation:infFlashRed .8s ease-in-out 2 alternate}
+@keyframes infFlashRed{0%{background:#0f1218}100%{background:#241112}}
+.wrap.fx-calm{animation:infCalm .8s ease forwards}
+@keyframes infCalm{from{background:#241112}to{background:#0f1218}}
+.wrap.fx-blue{animation:infBlue .7s ease-in-out 2 alternate}
+@keyframes infBlue{0%{box-shadow:0 0 0 0 rgba(0,144,255,.10)}100%{box-shadow:0 0 0 14px rgba(0,144,255,.08)}}
+.wrap.fx-pink{animation:infPink .7s ease-in-out 2 alternate}
+@keyframes infPink{0%{box-shadow:0 0 0 0 rgba(238,0,120,.10)}100%{box-shadow:0 0 0 14px rgba(238,0,120,.08)}}
+
+/* קונפטי "פוף" שמכסה את כל הוופורט (אבל נשאר בתוך #app) */
+.confetti-fixed{pointer-events:none;position:fixed;inset:0;z-index:999;overflow:hidden}
+.confetti-fixed span{position:absolute;top:-20px;font-size:20px;animation:infFall 1.8s linear forwards}
+@keyframes infFall{to{transform:translateY(110vh) rotate(240deg);opacity:.95}}
+/* Infinite-only layout & sizing */
+.wrap-infinite{
+  display:grid;
+  gap:32px;              /* ריווח אלגנטי ומאוזן */
+  justify-items:center;  /* מרכז הכל אופקית */
+  text-align:center;     /* טקסט ממורכז */
+  margin-top: clamp(32px, 8vh, 64px); /* ריווח מודרני מראש העמוד */
+  padding-bottom: 24px;  /* ריווח מתחת */
+}
+.wrap-infinite h1{ margin:0; font-size:28px; line-height:1.3; font-weight:800; letter-spacing:-0.02em }
+.wrap-infinite .sub{ margin:0; font-size:16px; opacity:.85; line-height:1.5; color:#9aa3b2 }
+
+/* אייקון מתנה מעל הכותרת הראשית */
+.inf-icon{
+  width:56px; height:56px; border-radius:16px;
+  background:linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border:1px solid rgba(255,255,255,.08);
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; line-height:1;
+  box-shadow:0 8px 24px rgba(0,0,0,.15);
+  animation:infIconFloat 3s ease-in-out infinite;
+}
+@keyframes infIconFloat{
+  0%, 100%{ transform:translateY(0px) }
+  50%{ transform:translateY(-6px) }
+}
+
+/* כפתור גדול ואמין (אחיד לכל המצבים) */
+.wrap-infinite .btn{
+  width:min(300px, 100%);
+  min-height:52px;
+  padding:16px 20px;
+  font-size:16px;
+  border-radius:12px;
+  font-weight:700;
+  margin:0 auto;
+  transition:transform .15s ease, box-shadow .15s ease;
+  box-shadow:0 4px 16px rgba(0,0,0,.2);
+}
+.wrap-infinite .btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(0,0,0,.3);
+}
+.wrap-infinite .btn:active{
+  transform:translateY(0);
+}
+
+/* בר־התקדמות מיושר לרוחב הכפתור */
+.wrap-infinite .progress{ width:min(320px, 100%); margin-top:4px; height:10px; border-radius:999px }
+
+/* earned – קצת רווח מעל */
+.wrap-infinite .earned{ margin-top:12px; font-size:17px; font-weight:700; color:#10b981 }
+  
+/* כפתור ראשי – צבע מותג */
+.btn.brand{ background:#282D3F; color:#fff; border:1px solid rgba(255,255,255,.1) }
+
+/* כפתורי שגיאה – אדום */
+.btn.error-red{ background:#ef4444; color:#fff }
+
+/* כפתור הצלחה ירוק */
+.btn.green{ background:#10b981; color:#fff }
+
+/* אייקון הצלחה מעל המסך האחרון */
+.inf-success-icon{
+  width:64px; height:64px; border-radius:20px;
+  background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(52,211,153,0.15));
+  border:1px solid rgba(16,185,129,.2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px; line-height:1;
+  box-shadow:0 8px 32px rgba(16,185,129,.2);
+  animation:infSuccessPop .5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+@keyframes infSuccessPop{
+  0%{ transform:scale(0) rotate(-45deg); opacity:0 }
+  100%{ transform:scale(1) rotate(0); opacity:1 }
+}
+
+/* earned – קצת רווח מעל */
+.wrap-infinite .earned{ margin-top:8px }
+  
+/* כפתור הצלחה ירוק */
+.btn.green{ background:#10b981; color:#fff }
+  
+/* ===== THEMES SYSTEM - ALL FEATURES (כל המתיחות) ===== */
+/* 1️⃣ LIGHT MODE */
+body.theme-light {
+  background: linear-gradient(135deg, #e0e7ff 0%, #f0f9ff 100%);
+}
+body.theme-light .phone {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-color: rgba(59,130,246,.15);
+}
+
+/* כותרות וטקסטים - כל המתיחות */
+.wrap-infinite.theme-light,
+.wrap-captcha.theme-light,
+.wrap-shake.theme-light,
+.wrap-voice.theme-light,
+.wrap-finger.theme-light,
+.wrap-nq.theme-light {
+  background: transparent;
+  color: #0f172a;
+}
+
+.wrap-infinite.theme-light h1,
+.wrap-captcha.theme-light h1,
+.wrap-shake.theme-light h1,
+.wrap-voice.theme-light h1,
+.wrap-finger.theme-light h1,
+.wrap-nq.theme-light h1 {
+  color: #0f172a;
+}
+
+.wrap-infinite.theme-light .sub,
+.wrap-captcha.theme-light .sub,
+.wrap-shake.theme-light .sub,
+.wrap-voice.theme-light .sub,
+.wrap-finger.theme-light .sub,
+.wrap-nq.theme-light .sub {
+  color: #475569;
+  opacity: 1;
+}
+
+/* אייקונים - כל הסוגים */
+.wrap-infinite.theme-light .inf-icon,
+.wrap-infinite.theme-light .inf-success-icon,
+.wrap-captcha.theme-light .cap-gift-icon,
+.wrap-captcha.theme-light .cap-success-icon,
+.wrap-shake.theme-light .sh-gift-icon,
+.wrap-shake.theme-light .sh-success-icon,
+.wrap-voice.theme-light .vv-gift-icon,
+.wrap-voice.theme-light .vv-success-icon,
+.wrap-finger.theme-light .sf-gift-icon,
+.wrap-finger.theme-light .sf-success-icon,
+.wrap-nq.theme-light .nq-gift-icon,
+.wrap-nq.theme-light .nq-success-icon {
+  background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(168,85,247,0.1));
+  border: 1px solid rgba(59,130,246,.15);
+  box-shadow: 0 8px 24px rgba(59,130,246,.1);
+}
+
+/* כפתורים */
+.wrap-infinite.theme-light .btn.brand,
+.wrap-captcha.theme-light .btn.brand,
+.wrap-shake.theme-light .btn.brand,
+.wrap-voice.theme-light .btn.brand,
+.wrap-finger.theme-light .btn.brand,
+.wrap-nq.theme-light .btn.brand {
+  background: #3b82f6;
+  color: #ffffff;
+  border: 1px solid rgba(59,130,246,.3);
+}
+
+.wrap-infinite.theme-light .btn.error-red,
+.wrap-captcha.theme-light .btn.error-red,
+.wrap-shake.theme-light .btn.error-red {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.wrap-infinite.theme-light .btn.green,
+.wrap-captcha.theme-light .btn.green,
+.wrap-shake.theme-light .btn.green,
+.wrap-voice.theme-light .btn.green,
+.wrap-finger.theme-light .btn.green,
+.wrap-nq.theme-light .btn.green {
+  background: #10b981;
+  color: #ffffff;
+}
+
+/* Progress bar */
+.wrap-infinite.theme-light .progress,
+.wrap-shake.theme-light .progress {
+  background: rgba(0,0,0,.08);
+  border: 1px solid rgba(0,0,0,.1);
+}
+
+.wrap-infinite.theme-light .earned,
+.wrap-shake.theme-light .earned {
+  color: #10b981;
+}
+
+/* אלמנטים ייחודיים למתיחות */
+.wrap-captcha.theme-light .cap-grid,
+.wrap-captcha.theme-light .cap-cell {
+  border-color: rgba(59,130,246,.2);
+}
+
+.wrap-shake.theme-light .sh-shake-box {
+  background: rgba(59,130,246,.05);
+  border-color: rgba(59,130,246,.2);
+}
+
+.wrap-voice.theme-light .vv-rec-circle {
+  background: rgba(59,130,246,.1);
+  border-color: rgba(59,130,246,.3);
+}
+
+.wrap-finger.theme-light .sf-finger-area {
+  background: rgba(59,130,246,.05);
+  border-color: rgba(59,130,246,.2);
+}
+
+/* 2️⃣ ROMANTIC MODE */
+body.theme-romantic {
+  background: linear-gradient(135deg, #1a0a1f 0%, #2d1b3d 50%, #1a0a1f 100%);
+}
+body.theme-romantic .phone {
+  background: linear-gradient(135deg, #1a0a1f 0%, #2d1b3d 100%);
+  border-color: rgba(236,72,153,.2);
+}
+
+.wrap-infinite.theme-romantic,
+.wrap-captcha.theme-romantic,
+.wrap-shake.theme-romantic,
+.wrap-voice.theme-romantic,
+.wrap-finger.theme-romantic,
+.wrap-nq.theme-romantic {
+  background: transparent;
+  color: #f8e8f5;
+}
+
+.wrap-infinite.theme-romantic h1,
+.wrap-captcha.theme-romantic h1,
+.wrap-shake.theme-romantic h1,
+.wrap-voice.theme-romantic h1,
+.wrap-finger.theme-romantic h1,
+.wrap-nq.theme-romantic h1 {
+  color: #fce7f3;
+  text-shadow: 0 2px 12px rgba(251,207,232,.3);
+}
+
+.wrap-infinite.theme-romantic .sub,
+.wrap-captcha.theme-romantic .sub,
+.wrap-shake.theme-romantic .sub,
+.wrap-voice.theme-romantic .sub,
+.wrap-finger.theme-romantic .sub,
+.wrap-nq.theme-romantic .sub {
+  color: #f9a8d4;
+  opacity: 0.9;
+}
+
+.wrap-infinite.theme-romantic .inf-icon,
+.wrap-infinite.theme-romantic .inf-success-icon,
+.wrap-captcha.theme-romantic .cap-gift-icon,
+.wrap-captcha.theme-romantic .cap-success-icon,
+.wrap-shake.theme-romantic .sh-gift-icon,
+.wrap-shake.theme-romantic .sh-success-icon,
+.wrap-voice.theme-romantic .vv-gift-icon,
+.wrap-voice.theme-romantic .vv-success-icon,
+.wrap-finger.theme-romantic .sf-gift-icon,
+.wrap-finger.theme-romantic .sf-success-icon,
+.wrap-nq.theme-romantic .nq-gift-icon,
+.wrap-nq.theme-romantic .nq-success-icon {
+  background: linear-gradient(135deg, rgba(236,72,153,0.15), rgba(219,39,119,0.15));
+  border: 1px solid rgba(236,72,153,.25);
+  box-shadow: 0 8px 32px rgba(236,72,153,.25);
+}
+
+.wrap-infinite.theme-romantic .btn.brand,
+.wrap-captcha.theme-romantic .btn.brand,
+.wrap-shake.theme-romantic .btn.brand,
+.wrap-voice.theme-romantic .btn.brand,
+.wrap-finger.theme-romantic .btn.brand,
+.wrap-nq.theme-romantic .btn.brand {
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  color: #ffffff;
+  border: 1px solid rgba(251,207,232,.2);
+  box-shadow: 0 4px 20px rgba(236,72,153,.3);
+}
+
+.wrap-infinite.theme-romantic .btn.brand:hover,
+.wrap-captcha.theme-romantic .btn.brand:hover,
+.wrap-shake.theme-romantic .btn.brand:hover,
+.wrap-voice.theme-romantic .btn.brand:hover,
+.wrap-finger.theme-romantic .btn.brand:hover,
+.wrap-nq.theme-romantic .btn.brand:hover {
+  box-shadow: 0 8px 32px rgba(236,72,153,.4);
+}
+
+.wrap-infinite.theme-romantic .btn.error-red,
+.wrap-captcha.theme-romantic .btn.error-red,
+.wrap-shake.theme-romantic .btn.error-red {
+  background: #be185d;
+  color: #fce7f3;
+}
+
+.wrap-infinite.theme-romantic .btn.green,
+.wrap-captcha.theme-romantic .btn.green,
+.wrap-shake.theme-romantic .btn.green,
+.wrap-voice.theme-romantic .btn.green,
+.wrap-finger.theme-romantic .btn.green,
+.wrap-nq.theme-romantic .btn.green {
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+  color: #ffffff;
+}
+
+.wrap-infinite.theme-romantic .progress,
+.wrap-shake.theme-romantic .progress {
+  background: rgba(236,72,153,.1);
+  border: 1px solid rgba(236,72,153,.2);
+}
+
+.wrap-infinite.theme-romantic .progress__bar,
+.wrap-shake.theme-romantic .progress__bar {
+  background: linear-gradient(90deg, #ec4899, #f472b6);
+}
+
+.wrap-infinite.theme-romantic .earned,
+.wrap-shake.theme-romantic .earned {
+  color: #fbcfe8;
+}
+
+.wrap-captcha.theme-romantic .cap-grid,
+.wrap-captcha.theme-romantic .cap-cell {
+  border-color: rgba(236,72,153,.3);
+}
+
+.wrap-shake.theme-romantic .sh-shake-box {
+  background: rgba(236,72,153,.05);
+  border-color: rgba(236,72,153,.3);
+}
+
+.wrap-voice.theme-romantic .vv-rec-circle {
+  background: rgba(236,72,153,.1);
+  border-color: rgba(236,72,153,.4);
+}
+
+.wrap-finger.theme-romantic .sf-finger-area {
+  background: rgba(236,72,153,.05);
+  border-color: rgba(236,72,153,.3);
+}
+
+/* 3️⃣ LUXURY MODE */
+body.theme-luxury {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1410 50%, #0a0a0a 100%);
+}
+body.theme-luxury .phone {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1410 100%);
+  border-color: rgba(251,191,36,.2);
+}
+
+.wrap-infinite.theme-luxury,
+.wrap-captcha.theme-luxury,
+.wrap-shake.theme-luxury,
+.wrap-voice.theme-luxury,
+.wrap-finger.theme-luxury,
+.wrap-nq.theme-luxury {
+  background: transparent;
+  color: #f5f5f4;
+}
+
+.wrap-infinite.theme-luxury h1,
+.wrap-captcha.theme-luxury h1,
+.wrap-shake.theme-luxury h1,
+.wrap-voice.theme-luxury h1,
+.wrap-finger.theme-luxury h1,
+.wrap-nq.theme-luxury h1 {
+  color: #fbbf24;
+  text-shadow: 0 2px 16px rgba(251,191,36,.4);
+  font-weight: 900;
+}
+
+.wrap-infinite.theme-luxury .sub,
+.wrap-captcha.theme-luxury .sub,
+.wrap-shake.theme-luxury .sub,
+.wrap-voice.theme-luxury .sub,
+.wrap-finger.theme-luxury .sub,
+.wrap-nq.theme-luxury .sub {
+  color: #d6d3d1;
+  opacity: 0.85;
+}
+
+.wrap-infinite.theme-luxury .inf-icon,
+.wrap-infinite.theme-luxury .inf-success-icon,
+.wrap-captcha.theme-luxury .cap-gift-icon,
+.wrap-captcha.theme-luxury .cap-success-icon,
+.wrap-shake.theme-luxury .sh-gift-icon,
+.wrap-shake.theme-luxury .sh-success-icon,
+.wrap-voice.theme-luxury .vv-gift-icon,
+.wrap-voice.theme-luxury .vv-success-icon,
+.wrap-finger.theme-luxury .sf-gift-icon,
+.wrap-finger.theme-luxury .sf-success-icon,
+.wrap-nq.theme-luxury .nq-gift-icon,
+.wrap-nq.theme-luxury .nq-success-icon {
+  background: linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.12));
+  border: 1px solid rgba(251,191,36,.3);
+  box-shadow: 0 8px 32px rgba(251,191,36,.2), inset 0 1px 0 rgba(251,191,36,.1);
+}
+
+.wrap-infinite.theme-luxury .btn.brand,
+.wrap-captcha.theme-luxury .btn.brand,
+.wrap-shake.theme-luxury .btn.brand,
+.wrap-voice.theme-luxury .btn.brand,
+.wrap-finger.theme-luxury .btn.brand,
+.wrap-nq.theme-luxury .btn.brand {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #0a0a0a;
+  border: 1px solid rgba(251,191,36,.4);
+  box-shadow: 0 4px 20px rgba(251,191,36,.3);
+  font-weight: 800;
+}
+
+.wrap-infinite.theme-luxury .btn.brand:hover,
+.wrap-captcha.theme-luxury .btn.brand:hover,
+.wrap-shake.theme-luxury .btn.brand:hover,
+.wrap-voice.theme-luxury .btn.brand:hover,
+.wrap-finger.theme-luxury .btn.brand:hover,
+.wrap-nq.theme-luxury .btn.brand:hover {
+  box-shadow: 0 8px 32px rgba(251,191,36,.45);
+}
+
+.wrap-infinite.theme-luxury .btn.error-red,
+.wrap-captcha.theme-luxury .btn.error-red,
+.wrap-shake.theme-luxury .btn.error-red {
+  background: linear-gradient(135deg, #7c2d12 0%, #991b1b 100%);
+  color: #fef3c7;
+  border: 1px solid rgba(251,191,36,.2);
+}
+
+.wrap-infinite.theme-luxury .btn.green,
+.wrap-captcha.theme-luxury .btn.green,
+.wrap-shake.theme-luxury .btn.green,
+.wrap-voice.theme-luxury .btn.green,
+.wrap-finger.theme-luxury .btn.green,
+.wrap-nq.theme-luxury .btn.green {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  color: #0a0a0a;
+  font-weight: 800;
+}
+
+.wrap-infinite.theme-luxury .progress,
+.wrap-shake.theme-luxury .progress {
+  background: rgba(251,191,36,.08);
+  border: 1px solid rgba(251,191,36,.2);
+}
+
+.wrap-infinite.theme-luxury .progress__bar,
+.wrap-shake.theme-luxury .progress__bar {
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+}
+
+.wrap-infinite.theme-luxury .earned,
+.wrap-shake.theme-luxury .earned {
+  color: #fbbf24;
+  font-weight: 800;
+}
+
+.wrap-captcha.theme-luxury .cap-grid,
+.wrap-captcha.theme-luxury .cap-cell {
+  border-color: rgba(251,191,36,.3);
+}
+
+.wrap-shake.theme-luxury .sh-shake-box {
+  background: rgba(251,191,36,.03);
+  border-color: rgba(251,191,36,.3);
+}
+
+.wrap-voice.theme-luxury .vv-rec-circle {
+  background: rgba(251,191,36,.08);
+  border-color: rgba(251,191,36,.4);
+}
+
+.wrap-finger.theme-luxury .sf-finger-area {
+  background: rgba(251,191,36,.03);
+  border-color: rgba(251,191,36,.3);
+}
+
+/* 4️⃣ NEON MODE */
+body.theme-neon {
+  background: linear-gradient(135deg, #0a0015 0%, #1a0033 50%, #0a0015 100%);
+}
+body.theme-neon .phone {
+  background: linear-gradient(135deg, #0a0015 0%, #1a0033 100%);
+  border-color: rgba(34,211,238,.3);
+  box-shadow: 0 20px 60px rgba(34,211,238,.2);
+}
+
+.wrap-infinite.theme-neon,
+.wrap-captcha.theme-neon,
+.wrap-shake.theme-neon,
+.wrap-voice.theme-neon,
+.wrap-finger.theme-neon,
+.wrap-nq.theme-neon {
+  background: transparent;
+  color: #e0f2fe;
+}
+
+.wrap-infinite.theme-neon h1,
+.wrap-captcha.theme-neon h1,
+.wrap-shake.theme-neon h1,
+.wrap-voice.theme-neon h1,
+.wrap-finger.theme-neon h1,
+.wrap-nq.theme-neon h1 {
+  color: #22d3ee;
+  text-shadow: 0 0 20px rgba(34,211,238,.6), 0 0 40px rgba(34,211,238,.3);
+  animation: neonPulse 2s ease-in-out infinite;
+}
+
+@keyframes neonPulse {
+  0%, 100% { text-shadow: 0 0 20px rgba(34,211,238,.6), 0 0 40px rgba(34,211,238,.3); }
+  50% { text-shadow: 0 0 30px rgba(34,211,238,.8), 0 0 60px rgba(34,211,238,.5); }
+}
+
+.wrap-infinite.theme-neon .sub,
+.wrap-captcha.theme-neon .sub,
+.wrap-shake.theme-neon .sub,
+.wrap-voice.theme-neon .sub,
+.wrap-finger.theme-neon .sub,
+.wrap-nq.theme-neon .sub {
+  color: #a5f3fc;
+  opacity: 0.9;
+}
+
+.wrap-infinite.theme-neon .inf-icon,
+.wrap-infinite.theme-neon .inf-success-icon,
+.wrap-captcha.theme-neon .cap-gift-icon,
+.wrap-captcha.theme-neon .cap-success-icon,
+.wrap-shake.theme-neon .sh-gift-icon,
+.wrap-shake.theme-neon .sh-success-icon,
+.wrap-voice.theme-neon .vv-gift-icon,
+.wrap-voice.theme-neon .vv-success-icon,
+.wrap-finger.theme-neon .sf-gift-icon,
+.wrap-finger.theme-neon .sf-success-icon,
+.wrap-nq.theme-neon .nq-gift-icon,
+.wrap-nq.theme-neon .nq-success-icon {
+  background: linear-gradient(135deg, rgba(34,211,238,0.15), rgba(168,85,247,0.15));
+  border: 1px solid rgba(34,211,238,.4);
+  box-shadow: 0 0 24px rgba(34,211,238,.4), 0 0 48px rgba(168,85,247,.2);
+}
+
+.wrap-infinite.theme-neon .btn.brand,
+.wrap-captcha.theme-neon .btn.brand,
+.wrap-shake.theme-neon .btn.brand,
+.wrap-voice.theme-neon .btn.brand,
+.wrap-finger.theme-neon .btn.brand,
+.wrap-nq.theme-neon .btn.brand {
+  background: linear-gradient(135deg, #06b6d4 0%, #a855f7 100%);
+  color: #ffffff;
+  border: 1px solid rgba(34,211,238,.3);
+  box-shadow: 0 0 20px rgba(34,211,238,.4), 0 4px 16px rgba(0,0,0,.3);
+}
+
+.wrap-infinite.theme-neon .btn.brand:hover,
+.wrap-captcha.theme-neon .btn.brand:hover,
+.wrap-shake.theme-neon .btn.brand:hover,
+.wrap-voice.theme-neon .btn.brand:hover,
+.wrap-finger.theme-neon .btn.brand:hover,
+.wrap-nq.theme-neon .btn.brand:hover {
+  box-shadow: 0 0 32px rgba(34,211,238,.6), 0 8px 24px rgba(0,0,0,.4);
+}
+
+.wrap-infinite.theme-neon .btn.error-red,
+.wrap-captcha.theme-neon .btn.error-red,
+.wrap-shake.theme-neon .btn.error-red {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(239,68,68,.4);
+}
+
+.wrap-infinite.theme-neon .btn.green,
+.wrap-captcha.theme-neon .btn.green,
+.wrap-shake.theme-neon .btn.green,
+.wrap-voice.theme-neon .btn.green,
+.wrap-finger.theme-neon .btn.green,
+.wrap-nq.theme-neon .btn.green {
+  background: linear-gradient(135deg, #10b981 0%, #22d3ee 100%);
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(34,211,238,.4);
+}
+
+.wrap-infinite.theme-neon .progress,
+.wrap-shake.theme-neon .progress {
+  background: rgba(34,211,238,.08);
+  border: 1px solid rgba(34,211,238,.3);
+}
+
+.wrap-infinite.theme-neon .progress__bar,
+.wrap-shake.theme-neon .progress__bar {
+  background: linear-gradient(90deg, #06b6d4, #a855f7);
+  box-shadow: 0 0 12px rgba(34,211,238,.5);
+}
+
+.wrap-infinite.theme-neon .earned,
+.wrap-shake.theme-neon .earned {
+  color: #22d3ee;
+  text-shadow: 0 0 12px rgba(34,211,238,.6);
+}
+
+.wrap-captcha.theme-neon .cap-grid,
+.wrap-captcha.theme-neon .cap-cell {
+  border-color: rgba(34,211,238,.4);
+}
+
+.wrap-shake.theme-neon .sh-shake-box {
+  background: rgba(34,211,238,.05);
+  border-color: rgba(34,211,238,.4);
+}
+
+.wrap-voice.theme-neon .vv-rec-circle {
+  background: rgba(34,211,238,.1);
+  border-color: rgba(34,211,238,.5);
+}
+
+.wrap-finger.theme-neon .sf-finger-area {
+  background: rgba(34,211,238,.05);
+  border-color: rgba(34,211,238,.4);
+}
+/* ===== תיקון 2: CSS נוסף ל-Narcissist Q ===== */
+/* להוסיף בסוף ה-CSS של כל theme (אחרי `.wrap-nq.theme-...`) */
+
+/* 1️⃣ LIGHT MODE - Narcissist Q */
+.wrap-nq.theme-light .nq-card {
+  background: rgba(59,130,246,.05);
+  border-color: rgba(59,130,246,.15);
+  color: #0f172a;
+}
+.wrap-nq.theme-light .nq-card:hover {
+  border-color: rgba(59,130,246,.3);
+  background: rgba(59,130,246,.08);
+}
+.wrap-nq.theme-light .nq-letter {
+  color: #64748b;
+}
+.wrap-nq.theme-light .nq-text {
+  color: #0f172a;
+}
+.wrap-nq.theme-light .nq-steps {
+  color: #64748b;
+}
+.wrap-nq.theme-light .nq-card.ok {
+  border-color: rgba(16,185,129,.45);
+  box-shadow: 0 10px 28px rgba(16,185,129,.2);
+}
+.wrap-nq.theme-light .nq-card.err {
+  border-color: rgba(239,68,68,.55);
+  box-shadow: 0 10px 28px rgba(239,68,68,.2);
+  background: linear-gradient(0deg, rgba(239,68,68,.08), transparent);
+}
+
+/* 2️⃣ ROMANTIC MODE - Narcissist Q */
+.wrap-nq.theme-romantic .nq-card {
+  background: rgba(236,72,153,.05);
+  border-color: rgba(236,72,153,.2);
+}
+.wrap-nq.theme-romantic .nq-card:hover {
+  border-color: rgba(236,72,153,.35);
+  background: rgba(236,72,153,.08);
+}
+.wrap-nq.theme-romantic .nq-letter {
+  color: #f9a8d4;
+}
+.wrap-nq.theme-romantic .nq-text {
+  color: #f8e8f5;
+}
+.wrap-nq.theme-romantic .nq-steps {
+  color: #f9a8d4;
+}
+.wrap-nq.theme-romantic .nq-card.ok {
+  border-color: rgba(236,72,153,.45);
+  box-shadow: 0 10px 28px rgba(236,72,153,.25);
+}
+.wrap-nq.theme-romantic .nq-card.err {
+  border-color: rgba(190,24,93,.55);
+  box-shadow: 0 10px 28px rgba(190,24,93,.25);
+  background: linear-gradient(0deg, rgba(190,24,93,.1), transparent);
+}
+
+/* 3️⃣ LUXURY MODE - Narcissist Q */
+.wrap-nq.theme-luxury .nq-card {
+  background: rgba(251,191,36,.03);
+  border-color: rgba(251,191,36,.2);
+}
+.wrap-nq.theme-luxury .nq-card:hover {
+  border-color: rgba(251,191,36,.35);
+  background: rgba(251,191,36,.06);
+}
+.wrap-nq.theme-luxury .nq-letter {
+  color: #d6d3d1;
+}
+.wrap-nq.theme-luxury .nq-text {
+  color: #f5f5f4;
+}
+.wrap-nq.theme-luxury .nq-steps {
+  color: #d6d3d1;
+}
+.wrap-nq.theme-luxury .nq-card.ok {
+  border-color: rgba(251,191,36,.45);
+  box-shadow: 0 10px 28px rgba(251,191,36,.25);
+}
+.wrap-nq.theme-luxury .nq-card.err {
+  border-color: rgba(124,45,18,.55);
+  box-shadow: 0 10px 28px rgba(124,45,18,.25);
+  background: linear-gradient(0deg, rgba(124,45,18,.1), transparent);
+}
+
+/* 4️⃣ NEON MODE - Narcissist Q */
+.wrap-nq.theme-neon .nq-card {
+  background: rgba(34,211,238,.05);
+  border-color: rgba(34,211,238,.25);
+  box-shadow: 0 0 20px rgba(34,211,238,.15);
+}
+.wrap-nq.theme-neon .nq-card:hover {
+  border-color: rgba(34,211,238,.4);
+  background: rgba(34,211,238,.08);
+  box-shadow: 0 0 24px rgba(34,211,238,.25);
+}
+.wrap-nq.theme-neon .nq-letter {
+  color: #a5f3fc;
+}
+.wrap-nq.theme-neon .nq-text {
+  color: #e0f2fe;
+}
+.wrap-nq.theme-neon .nq-steps {
+  color: #a5f3fc;
+}
+.wrap-nq.theme-neon .nq-card.ok {
+  border-color: rgba(34,211,238,.5);
+  box-shadow: 0 0 32px rgba(34,211,238,.35);
+}
+.wrap-nq.theme-neon .nq-card.err {
+  border-color: rgba(220,38,38,.5);
+  box-shadow: 0 0 32px rgba(220,38,38,.3);
+  background: linear-gradient(0deg, rgba(220,38,38,.1), transparent);
+}
+/* 1️⃣ LIGHT MODE - כפתורים */
+.wrap-nq.theme-light .nq-btn.nq-brand {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(59,130,246,.3) !important;
+}
+.wrap-nq.theme-light .nq-btn.nq-green {
+  background: #10b981 !important;
+  color: #ffffff !important;
+}
+
+/* 2️⃣ ROMANTIC MODE - כפתורים */
+.wrap-nq.theme-romantic .nq-btn.nq-brand {
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(251,207,232,.2) !important;
+  box-shadow: 0 4px 20px rgba(236,72,153,.3) !important;
+}
+.wrap-nq.theme-romantic .nq-btn.nq-brand:hover {
+  box-shadow: 0 8px 32px rgba(236,72,153,.4) !important;
+}
+.wrap-nq.theme-romantic .nq-btn.nq-green {
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%) !important;
+  color: #ffffff !important;
+}
+
+/* 3️⃣ LUXURY MODE - כפתורים */
+.wrap-nq.theme-luxury .nq-btn.nq-brand {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  color: #0a0a0a !important;
+  border: 1px solid rgba(251,191,36,.4) !important;
+  box-shadow: 0 4px 20px rgba(251,191,36,.3) !important;
+  font-weight: 800 !important;
+}
+.wrap-nq.theme-luxury .nq-btn.nq-brand:hover {
+  box-shadow: 0 8px 32px rgba(251,191,36,.45) !important;
+}
+.wrap-nq.theme-luxury .nq-btn.nq-green {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%) !important;
+  color: #0a0a0a !important;
+  font-weight: 800 !important;
+}
+
+/* 4️⃣ NEON MODE - כפתורים */
+.wrap-nq.theme-neon .nq-btn.nq-brand {
+  background: linear-gradient(135deg, #06b6d4 0%, #a855f7 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(34,211,238,.3) !important;
+  box-shadow: 0 0 20px rgba(34,211,238,.4), 0 4px 16px rgba(0,0,0,.3) !important;
+}
+.wrap-nq.theme-neon .nq-btn.nq-brand:hover {
+  box-shadow: 0 0 32px rgba(34,211,238,.6), 0 8px 24px rgba(0,0,0,.4) !important;
+}
+.wrap-nq.theme-neon .nq-btn.nq-green {
+  background: linear-gradient(135deg, #10b981 0%, #22d3ee 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 20px rgba(34,211,238,.4) !important;
+}
+/* ===== BREATH VERIFY - THEMES SUPPORT ===== */
+/* 1️⃣ LIGHT MODE - Breath Verify */
+.wrap-breath.theme-light {
+  background: transparent;
+  color: #0f172a;
+}
+.wrap-breath.theme-light .bv-title {
+  color: #0f172a;
+}
+.wrap-breath.theme-light .bv-sub {
+  color: #475569;
+  opacity: 1;
+}
+.wrap-breath.theme-light .bv-gift-icon {
+  background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(168,85,247,0.1));
+  border: 1px solid rgba(59,130,246,.15);
+  box-shadow: 0 8px 24px rgba(59,130,246,.1);
+}
+.wrap-breath.theme-light .bv-success-icon {
+  background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(52,211,153,0.15));
+  border: 1px solid rgba(16,185,129,.3);
+  box-shadow: 0 8px 32px rgba(16,185,129,.15);
+}
+.wrap-breath.theme-light .btn.brand,
+.wrap-breath.theme-light .bv-cta.brand {
+  background: #3b82f6;
+  color: #ffffff;
+  border: 1px solid rgba(59,130,246,.3);
+}
+.wrap-breath.theme-light .btn.green,
+.wrap-breath.theme-light .bv-cta.green {
+  background: #10b981;
+  color: #ffffff;
+}
+.wrap-breath.theme-light .bv-glass {
+  background: linear-gradient(180deg, #f8fafc, #ffffff);
+  border: 1px solid rgba(59,130,246,.15);
+  box-shadow: inset 0 0 0 1px rgba(59,130,246,.08), 0 20px 40px rgba(0,0,0,.1);
+}
+.wrap-breath.theme-light .bv-ring .bg {
+  stroke: rgba(0,0,0,.1);
+}
+.wrap-breath.theme-light .bv-chip {
+  background: rgba(59,130,246,.08);
+  border: 1px solid rgba(59,130,246,.2);
+  color: #0f172a;
+}
+
+/* 2️⃣ ROMANTIC MODE - Breath Verify */
+.wrap-breath.theme-romantic {
+  background: transparent;
+  color: #f8e8f5;
+}
+.wrap-breath.theme-romantic .bv-title {
+  color: #fce7f3;
+  text-shadow: 0 2px 12px rgba(251,207,232,.3);
+}
+.wrap-breath.theme-romantic .bv-sub {
+  color: #f9a8d4;
+  opacity: 0.9;
+}
+.wrap-breath.theme-romantic .bv-gift-icon {
+  background: linear-gradient(135deg, rgba(236,72,153,0.15), rgba(219,39,119,0.15));
+  border: 1px solid rgba(236,72,153,.25);
+  box-shadow: 0 8px 32px rgba(236,72,153,.25);
+}
+.wrap-breath.theme-romantic .bv-success-icon {
+  background: linear-gradient(135deg, rgba(236,72,153,0.2), rgba(244,114,182,0.2));
+  border: 1px solid rgba(236,72,153,.35);
+  box-shadow: 0 8px 32px rgba(236,72,153,.3);
+}
+.wrap-breath.theme-romantic .btn.brand,
+.wrap-breath.theme-romantic .bv-cta.brand {
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  color: #ffffff;
+  border: 1px solid rgba(251,207,232,.2);
+  box-shadow: 0 4px 20px rgba(236,72,153,.3);
+}
+.wrap-breath.theme-romantic .btn.brand:hover,
+.wrap-breath.theme-romantic .bv-cta.brand:hover {
+  box-shadow: 0 8px 32px rgba(236,72,153,.4);
+}
+.wrap-breath.theme-romantic .btn.green,
+.wrap-breath.theme-romantic .bv-cta.green {
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+  color: #ffffff;
+}
+.wrap-breath.theme-romantic .bv-glass {
+  background: linear-gradient(180deg, #2d1b3d, #1a0a1f);
+  border: 1px solid rgba(236,72,153,.2);
+  box-shadow: inset 0 0 0 1px rgba(236,72,153,.1), 0 20px 40px rgba(236,72,153,.15);
+}
+.wrap-breath.theme-romantic .bv-ring .bg {
+  stroke: rgba(236,72,153,.15);
+}
+.wrap-breath.theme-romantic .bv-chip {
+  background: rgba(236,72,153,.08);
+  border: 1px solid rgba(236,72,153,.2);
+  color: #fce7f3;
+}
+
+/* 3️⃣ LUXURY MODE - Breath Verify */
+.wrap-breath.theme-luxury {
+  background: transparent;
+  color: #f5f5f4;
+}
+.wrap-breath.theme-luxury .bv-title {
+  color: #fbbf24;
+  text-shadow: 0 2px 16px rgba(251,191,36,.4);
+  font-weight: 900;
+}
+.wrap-breath.theme-luxury .bv-sub {
+  color: #d6d3d1;
+  opacity: 0.85;
+}
+.wrap-breath.theme-luxury .bv-gift-icon {
+  background: linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.12));
+  border: 1px solid rgba(251,191,36,.3);
+  box-shadow: 0 8px 32px rgba(251,191,36,.2), inset 0 1px 0 rgba(251,191,36,.1);
+}
+.wrap-breath.theme-luxury .bv-success-icon {
+  background: linear-gradient(135deg, rgba(251,191,36,0.2), rgba(245,158,11,0.2));
+  border: 1px solid rgba(251,191,36,.4);
+  box-shadow: 0 8px 32px rgba(251,191,36,.3);
+}
+.wrap-breath.theme-luxury .btn.brand,
+.wrap-breath.theme-luxury .bv-cta.brand {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #0a0a0a;
+  border: 1px solid rgba(251,191,36,.4);
+  box-shadow: 0 4px 20px rgba(251,191,36,.3);
+  font-weight: 800;
+}
+.wrap-breath.theme-luxury .btn.brand:hover,
+.wrap-breath.theme-luxury .bv-cta.brand:hover {
+  box-shadow: 0 8px 32px rgba(251,191,36,.45);
+}
+.wrap-breath.theme-luxury .btn.green,
+.wrap-breath.theme-luxury .bv-cta.green {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  color: #0a0a0a;
+  font-weight: 800;
+}
+.wrap-breath.theme-luxury .bv-glass {
+  background: linear-gradient(180deg, #1a1410, #0a0a0a);
+  border: 1px solid rgba(251,191,36,.2);
+  box-shadow: inset 0 0 0 1px rgba(251,191,36,.1), 0 20px 40px rgba(251,191,36,.15);
+}
+.wrap-breath.theme-luxury .bv-ring .bg {
+  stroke: rgba(251,191,36,.15);
+}
+.wrap-breath.theme-luxury .bv-chip {
+  background: rgba(251,191,36,.08);
+  border: 1px solid rgba(251,191,36,.25);
+  color: #fbbf24;
+  font-weight: 800;
+}
+
+/* 4️⃣ NEON MODE - Breath Verify */
+.wrap-breath.theme-neon {
+  background: transparent;
+  color: #e0f2fe;
+}
+.wrap-breath.theme-neon .bv-title {
+  color: #22d3ee;
+  text-shadow: 0 0 20px rgba(34,211,238,.6), 0 0 40px rgba(34,211,238,.3);
+  animation: neonPulse 2s ease-in-out infinite;
+}
+.wrap-breath.theme-neon .bv-sub {
+  color: #a5f3fc;
+  opacity: 0.9;
+}
+.wrap-breath.theme-neon .bv-gift-icon {
+  background: linear-gradient(135deg, rgba(34,211,238,0.15), rgba(168,85,247,0.15));
+  border: 1px solid rgba(34,211,238,.4);
+  box-shadow: 0 0 24px rgba(34,211,238,.4), 0 0 48px rgba(168,85,247,.2);
+}
+.wrap-breath.theme-neon .bv-success-icon {
+  background: linear-gradient(135deg, rgba(34,211,238,0.2), rgba(168,85,247,0.2));
+  border: 1px solid rgba(34,211,238,.5);
+  box-shadow: 0 0 32px rgba(34,211,238,.5), 0 0 64px rgba(168,85,247,.3);
+}
+.wrap-breath.theme-neon .btn.brand,
+.wrap-breath.theme-neon .bv-cta.brand {
+  background: linear-gradient(135deg, #06b6d4 0%, #a855f7 100%);
+  color: #ffffff;
+  border: 1px solid rgba(34,211,238,.3);
+  box-shadow: 0 0 20px rgba(34,211,238,.4), 0 4px 16px rgba(0,0,0,.3);
+}
+.wrap-breath.theme-neon .btn.brand:hover,
+.wrap-breath.theme-neon .bv-cta.brand:hover {
+  box-shadow: 0 0 32px rgba(34,211,238,.6), 0 8px 24px rgba(0,0,0,.4);
+}
+.wrap-breath.theme-neon .btn.green,
+.wrap-breath.theme-neon .bv-cta.green {
+  background: linear-gradient(135deg, #10b981 0%, #22d3ee 100%);
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(34,211,238,.4);
+}
+.wrap-breath.theme-neon .bv-glass {
+  background: linear-gradient(180deg, #1a0033, #0a0015);
+  border: 1px solid rgba(34,211,238,.3);
+  box-shadow: inset 0 0 0 1px rgba(34,211,238,.15), 0 20px 40px rgba(34,211,238,.2), 0 0 60px rgba(168,85,247,.15);
+}
+.wrap-breath.theme-neon .bv-ring .bg {
+  stroke: rgba(34,211,238,.15);
+}
+.wrap-breath.theme-neon .bv-chip {
+  background: rgba(34,211,238,.08);
+  border: 1px solid rgba(34,211,238,.3);
+  color: #22d3ee;
+  box-shadow: 0 0 12px rgba(34,211,238,.3);
+}
+</style>
+
+<!-- CAPTCHA UX styles (clean + tap improvements) -->
+<style id="captcha-ux">
+  .wrap-captcha{
+    display:grid; gap:32px; justify-items:center; text-align:center;
+    margin-top: clamp(32px, 8vh, 64px);
+    padding-bottom: 24px;
+  }
+  
+  /* אייקון מתנה מעל הכותרת */
+  .cap-gift-icon{
+    width:56px; height:56px; border-radius:16px;
+    background:linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+    border:1px solid rgba(255,255,255,.08);
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px; line-height:1;
+    box-shadow:0 8px 24px rgba(0,0,0,.15);
+    animation:capIconFloat 3s ease-in-out infinite;
+  }
+  @keyframes capIconFloat{
+    0%, 100%{ transform:translateY(0px) }
+    50%{ transform:translateY(-6px) }
+  }
+  
+  /* אייקון הצלחה */
+  .cap-success-icon{
+    width:64px; height:64px; border-radius:20px;
+    background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(52,211,153,0.15));
+    border:1px solid rgba(16,185,129,.2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:32px; line-height:1;
+    box-shadow:0 8px 32px rgba(16,185,129,.2);
+    animation:capSuccessPop .5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  @keyframes capSuccessPop{
+    0%{ transform:scale(0) rotate(-45deg); opacity:0 }
+    100%{ transform:scale(1) rotate(0); opacity:1 }
+  }
+  
+  .cap-title{ margin:0; font-size:28px; line-height:1.3; font-weight:800; letter-spacing:-0.02em }
+  .cap-sub{ margin:0; font-size:16px; color:#9aa3b2; line-height:1.5; opacity:.85 }
+  
+  .cap-grid{
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px;
+    width:min(360px, 100%);
+  }
+  .cap-tile{
+    position:relative; aspect-ratio:1/1; border-radius:12px; overflow:hidden;
+    border:1px solid rgba(255,255,255,.10); background:#12182b; cursor:pointer;
+    transition:transform .04s ease, box-shadow .12s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    will-change: transform;
+  }
+  .cap-tile:hover{ transform:translateY(-1px); box-shadow:0 8px 20px rgba(0,0,0,.25) }
+  .cap-img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    pointer-events:none; -webkit-user-drag:none; user-select:none;
+  }
+  .cap-filler{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:34px; filter:saturate(1.1); background:linear-gradient(135deg,#0f152a,#141a32) }
+  .cap-tile.sel::after{
+    content:"✓"; position:absolute; right:8px; top:6px; font-weight:900; font-size:16px;
+    background:#10b981; color:#062d24; border-radius:999px; padding:2px 6px;
+    box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  .cap-cta{ 
+    width:min(300px, 100%); min-height:52px; padding:16px 20px; font-size:16px;
+    border-radius:12px; font-weight:700; margin:0 auto;
+    transition:transform .15s ease, box-shadow .15s ease;
+    box-shadow:0 4px 16px rgba(0,0,0,.2);
+  }
+  .cap-cta:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(0,0,0,.3);
+  }
+  .cap-cta:active{ transform:translateY(0) }
+  .cap-cta.error{ animation:infShake .35s linear 1 }
+  .cap-cta.brand{ background:#282D3F; color:#fff; border:1px solid rgba(255,255,255,.1) }
+  .cap-cta.green{ background:#10b981; color:#fff }
+  .cap-hint{ font-size:12px; color:#9aa3b2 }
 </style>
 
 <div class="stage">
@@ -26,8 +1204,10 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
 <div>9:41</div>
 <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
 </div>
-<div class="wrap"><div id="app" class="card"></div></div>
-</div>
+<div class="wrap">
+  <div id="app" class="card"></div>
+  <!-- custom mobile scrollbar (inside the phone) -->
+  <div id="mScroll" class="custom-scrollbar"><i class="thumb"></i></div>
 </div>
 
 <script>
@@ -37,70 +1217,2125 @@ const F = (qs.get('f')||'').trim(); // feature slug
 const NAME = (qs.get('name')||'Friend').trim();
 const GIFT = (qs.get('giftUrl')||'#').trim();
 const PREV = (qs.get('preview')||'0').trim()==='1';
+function getCopy(key, fallback) {
+  const v = qs.get(key);
+  if (!v || v.trim().length === 0) return fallback;
+  return v.trim().slice(0, 80);
+}
+// === High‑quality SFX (from your GitHub) with safe fallback ===
+const SFX_BASE = 'https://tubile.github.io/kefpo-sfx/';
+const SFX_FILES = {
+  click:   'click.mp3',
+  confirm: 'confirm.mp3',
+  error:   'error.mp3',
+  tada:    'tada.mp3',
+  whoosh:  'whoosh.mp3'
+};
+
+// Preload one Audio element per sound (ניצור שיבוט בכל השמעה כדי לאפשר חפיפה)
+const __SFX = {};
+for (const [k,f] of Object.entries(SFX_FILES)) {
+  const a = new Audio(SFX_BASE + f);
+  a.preload = 'auto';
+  a.crossOrigin = 'anonymous'; // בטוח גם אם תרצה WebAudio בעתיד
+  __SFX[k] = a;
+}
+
+// ניסיון “פריימינג” עדין לפתיחת אודיו במובייל בהקשה הראשונה
+document.addEventListener('pointerdown', ()=>{
+  try{
+    const a = __SFX.click;
+    a.muted = true;
+    const p = a.play();
+    if (p && p.then) p.then(()=>{ a.pause(); a.currentTime = 0; a.muted = false; });
+  }catch(_){}
+}, { once:true });
+
+function sfx(kind){
+  const key = (kind in __SFX) ? kind : 'click';
+  try{
+    // מנגן שיבוט כדי לאפשר כמה צלילים זה על זה
+    const a = __SFX[key].cloneNode(true);
+    a.play().catch(()=>{ /* ייתכן בלוק אוטופליי – נתעלם בשקט */ });
+  }catch(e){
+    // Fallback – ביפ סינתטי (כמו שהיה)
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      const now = ctx.currentTime, freq = { error:180, whoosh:420, tada:880, confirm:520, click:660 }[kind] || 600;
+      o.type='sine'; o.frequency.setValueAtTime(freq, now);
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.2, now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+      o.connect(g); g.connect(ctx.destination); o.start(); o.stop(now + 0.16);
+    }catch(_) {}
+  }
+}
 
 // הצג סטטוס־בר רק בפריביו
 if (PREV) document.getElementById('status').style.display = 'flex';
+  // Runtime-only brand badge (hide in preview)
+if (!PREV) {
+  const wrap = document.querySelector('.wrap');
+  const appEl = document.getElementById('app');
+  if (wrap && appEl && !document.getElementById('kfBadge')) {
+    const a = document.createElement('a');
+    a.id = 'kfBadge';
+    a.className = 'kf-badge';
+    a.href = 'https://kefpo.co';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.innerHTML = '<i aria-hidden="true"></i><span>Made by Kefpo.co</span>';
+    wrap.insertBefore(a, appEl);   // חשוב: מחוץ ל-#app כדי שלא ימחק בהחלפת מסכים
+  }
+}
 
 function el(html){ document.getElementById('app').innerHTML = html; }
+  // ----- Custom mobile scrollbar logic -----
+const WRAP = document.querySelector('.wrap');
+const SB   = document.getElementById('mScroll');
+const TH   = SB ? SB.querySelector('.thumb') : null;
 
-// ===== Voice Verify (placeholder עד למימוש) =====
+function updateScrollbar(){
+  if(!WRAP || !SB || !TH) return;
+  const sh = WRAP.scrollHeight, ch = WRAP.clientHeight, st = WRAP.scrollTop;
+  // אם אין עודף גובה – לא להציג את הפס
+  if (sh <= ch + 1){ SB.style.display = 'none'; return; }
+  SB.style.display = ''; // יש גלילה → להציג
+
+  // חישוב גובה האגודל ומיקומו
+  const track = SB.clientHeight;
+  const minThumb = 28;
+  const thumbH = Math.max(minThumb, Math.round(track * (ch / sh)));
+  const y = Math.round((track - thumbH) * (st / (sh - ch)));
+  TH.style.height = thumbH + 'px';
+  TH.style.transform = `translateY(${y}px)`;
+}
+
+let hideTimer;
+if (WRAP){
+  WRAP.addEventListener('scroll', ()=>{
+    WRAP.classList.add('scrolling');
+    updateScrollbar();
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(()=> WRAP.classList.remove('scrolling'), 400);
+  }, {passive:true});
+
+  // כשמתחלף מסך בפיצ'ר (אנחנו משנים innerHTML על #app) – לחשב מחדש
+  const obs = new MutationObserver(()=> requestAnimationFrame(updateScrollbar));
+  obs.observe(document.getElementById('app'), { childList:true, subtree:true });
+
+  window.addEventListener('resize', updateScrollbar);
+  // חישוב ראשון
+  requestAnimationFrame(updateScrollbar);
+}
+
+// ===== Voice Verify (final) =====
 function voiceVerify(){
-el(`
-<div class="badge">Voice Verify – demo</div>
-<h1 class="h1">${NAME}, a special gift is waiting! 🎁</h1>
-<p class="p">Fun verification challenge.</p>
-<button class="btn btn-primary">Verify & get the gift</button>
-<p class="p" style="margin-top:12px">Gift link (hidden in real flow): <a href="${GIFT}" target="_blank">${GIFT}</a></p>
-`);
+  // הזרקת CSS חד‑פעמית לפיצ'ר (כדי שלא תצטרך לעדכן <style> נפרד)
+  if (!document.getElementById('voice-ux')){
+    const st = document.createElement('style');
+    st.id = 'voice-ux';
+    st.textContent = `
+      .wrap-voice{
+        display:grid; gap:32px; justify-items:center; text-align:center;
+        margin-top:clamp(32px, 8vh, 64px); padding-bottom:24px;
+      }
+      
+      /* אייקון מתנה מעל הכותרת */
+      .vv-gift-icon{
+        width:56px; height:56px; border-radius:16px;
+        background:linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+        border:1px solid rgba(255,255,255,.08);
+        display:flex; align-items:center; justify-content:center;
+        font-size:28px; line-height:1;
+        box-shadow:0 8px 24px rgba(0,0,0,.15);
+        animation:vvIconFloat 3s ease-in-out infinite;
+      }
+      @keyframes vvIconFloat{
+        0%, 100%{ transform:translateY(0px) }
+        50%{ transform:translateY(-6px) }
+      }
+      
+      /* אייקון הצלחה */
+      .vv-success-icon{
+        width:64px; height:64px; border-radius:20px;
+        background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(52,211,153,0.15));
+        border:1px solid rgba(16,185,129,.2);
+        display:flex; align-items:center; justify-content:center;
+        font-size:32px; line-height:1;
+        box-shadow:0 8px 32px rgba(16,185,129,.2);
+        animation:vvSuccessPop .5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      }
+      @keyframes vvSuccessPop{
+        0%{ transform:scale(0) rotate(-45deg); opacity:0 }
+        100%{ transform:scale(1) rotate(0); opacity:1 }
+      }
+      
+      .vv-title{ margin:0; font-size:28px; line-height:1.3; font-weight:800; letter-spacing:-0.02em }
+      .vv-sub{ margin:0; font-size:16px; color:#9aa3b2; line-height:1.5; opacity:.85 }
+      
+      .vv-cow{
+        width:min(280px, 100%);
+        border-radius:16px;
+        background:linear-gradient(180deg,#1b1f34,#111528);
+        display:flex; align-items:center; justify-content:center;
+        box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 20px 40px rgba(0,0,0,.35);
+        padding:24px;
+      }
+      .vv-cow .emoji{
+        font-size:120px; line-height:1;
+        user-select:none; -webkit-user-drag:none;
+      }
+
+      /* Alert toast overlay – identical look to the reference */
+      .toast{
+        position:fixed; inset:0; display:none; place-items:center;
+        background:rgba(10,12,22,.6); backdrop-filter:blur(3px);
+        text-align:center; padding:24px; z-index:1000;
+      }
+      .toast.show{ display:grid }
+      .toast .box{
+        background:#1a1f35; border-radius:16px; padding:20px;
+        box-shadow:0 10px 30px rgba(0,0,0,.35); max-width:320px
+      }
+      .toast h3{ margin:0 0 6px 0 }
+      
+      .vv-animal{
+        width:min(360px, 100%); aspect-ratio:16/10;
+        border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,.10);
+        background:#12182b; display:flex; align-items:center; justify-content:center;
+      }
+      .vv-animal img{ width:88%; height:88%; object-fit:contain; user-select:none; -webkit-user-drag:none }
+      .vv-rec{ display:grid; gap:10px; width:min(320px, 100%); }
+      .vv-meter{
+        height:10px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.08); position:relative;
+      }
+      .vv-meter > i{
+        position:absolute; left:0; top:0; bottom:0; width:0%;
+        background:linear-gradient(90deg,#f59e0b,#ef4444);
+        transition: width .06s linear;
+      }
+      .vv-time{ font-size:12px; color:#9aa3b2 }
+      .vv-err{ font-size:14px; color:#fca5a5; min-height:18px }
+      .btn.red{ background:#ef4444; color:#fff }
+      .btn.blue{ background:#3b82f6; color:#fff }
+      .btn.brand{ background:#282D3F; color:#fff; border:1px solid rgba(255,255,255,.1) }
+      .btn.green{ background:#10b981; color:#fff }
+      
+      /* כפתורים משופרים */
+      .vv-cta{
+        width:min(300px, 100%); min-height:52px; padding:16px 20px; font-size:16px;
+        border-radius:12px; font-weight:700;
+        transition:transform .15s ease, box-shadow .15s ease;
+        box-shadow:0 4px 16px rgba(0,0,0,.2);
+      }
+      .vv-cta:hover{
+        transform:translateY(-2px);
+        box-shadow:0 8px 24px rgba(0,0,0,.3);
+      }
+      .vv-cta:active{ transform:translateY(0) }
+      #vv-start {
+  width: min(300px, 100%);
+  min-height: 52px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: transform .15s ease, box-shadow .15s ease;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
+}
+#vv-start:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+}
+#vv-start:active {
+  transform: translateY(0);
+}
+    `;
+    document.head.appendChild(st);
+  }
+
+  // קריאת פרמטרים (חוזה runtime): ?f=voice-verify&name=&giftUrl=&preview=1
+  const qs   = new URLSearchParams(location.search);
+  const PREV = (qs.get('preview')||'0').trim()==='1';
+  const NAME = (qs.get('name')||'Friend').trim();
+  const GIFT = (qs.get('giftUrl')||'#').trim();
+  const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
+const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
+const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
+if (activeTheme !== 'dark') { document.body.className = 'theme-' + activeTheme; } 
+else { document.body.className = ''; }
+
+  const app = document.getElementById('app');
+  app.classList.remove('card'); // “מסך נקי” כמו בשאר הפיצ'רים
+  // --- SFX gate (voice-verify only): allow only 'error' and 'tada'
+const __sfxGlobal = window.sfx; // שמור מצביע לפונקציית הסאונד הגלובלית של הרנטיים
+function sfx(kind){
+  if (kind === 'error' || kind === 'tada'){
+    try{ __sfxGlobal && __sfxGlobal(kind); }catch(e){}
+  }
+  // כל השאר (click / confirm / whoosh ...) – מושתקים כאן מקומית
+}
+
+  // טקסטים לפי הבריף (ניתנים לאובררייד דרך URL אם תרצה)
+  const copy = {
+    introTitle: (qs.get('introTitle') || `${NAME}, a special gift is waiting! 🎁`).slice(0,80),
+    introSub:   (qs.get('introSub')   || `To claim it, please verify your identity.`).slice(0,80),
+    introBtn:   (qs.get('introBtn')   || `Verify & get the gift`).slice(0,32),
+
+    recTitle:   (qs.get('recTitle')   || `To verify your identity, record the sound of the animal`).slice(0,80),
+    errText:    (qs.get('errText')    || `We were unable to record sound, please try louder.`).slice(0,80),
+
+    okTitle:    (qs.get('okTitle')    || `You've earned it 😂`).slice(0,80),
+    okSub:      (qs.get('okSub')      || `Click to get your real gift`).slice(0,80),
+    okBtn:      (qs.get('okBtn')      || `Claim your gift!`).slice(0,32)
+  };
+
+  // תמונת “פרה” self-contained (SVG emoji) — ללא רשת/אחסון
+  function cowDataURL(){
+    const svg =
+      `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500'>
+         <rect width='100%' height='100%' fill='#0f1324'/>
+         <text x='50%' y='55%' text-anchor='middle' font-size='180'>🐮</text>
+       </svg>`;
+    return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+  }
+
+  // קונפטי (כמו בשאר הפיצ'רים)
+  function confettiBurst(canvas){
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const r = window.devicePixelRatio || 1;
+    function size(){ canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; ctx.setTransform(r,0,0,r,0,0); }
+    if(!canvas.__sized){ canvas.__sized = true; canvas.style.display='block'; size(); window.addEventListener('resize', size); }
+    const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
+    const pieces = [];
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    for(let i=0;i<120;i++){
+      pieces.push({ x:w/2, y:h/2, vx:(Math.random()*4-2), vy:(Math.random()*-3-2),
+        r:Math.random()*6+3, c:colors[(Math.random()*colors.length)|0], a:1, spin:(Math.random()*6.28), vr:(Math.random()*0.2-0.1) });
+    }
+    const g = 0.05; let t=0;
+    (function step(){
+      ctx.clearRect(0,0,w,h);
+      pieces.forEach(p=>{
+        p.vy += g; p.x += p.vx; p.y += p.vy; p.spin += p.vr; p.a -= 0.008;
+        ctx.globalAlpha = Math.max(p.a,0);
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r);
+        ctx.restore();
+      });
+      ctx.globalAlpha = 1;
+      if(t++<260) requestAnimationFrame(step); else ctx.clearRect(0,0,w,h);
+    })();
+  }
+
+  // מסך פתיחה
+  function screenIntro(){
+    app.innerHTML = `
+  <div class="wrap wrap-voice ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <div class="vv-gift-icon" aria-hidden="true">🎁</div>
+        <h1 class="vv-title">${copy.introTitle}</h1>
+        <p class="vv-sub">${copy.introSub}</p>
+        <button id="vv-start" class="btn brand vv-cta">${copy.introBtn}</button>
+        <div class="vv-sub" style="font-size:12px">no data collected</div>
+      </div>
+    `;
+    document.getElementById('vv-start').addEventListener('click', ()=>{
+      try{sfx('confirm')}catch(e){}
+      screenRecord();
+    });
+  }
+   
+  // מסך ההקלטה (נסיון ראשון → שגיאה אמינה; נסיון שני → הצלחה)
+  function screenRecord(){
+    app.innerHTML = `
+  <div class="wrap wrap-voice ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <h1 class="vv-title">${copy.recTitle}</h1>
+        <div class="vv-cow" id="vv-cow" aria-hidden="true"><div class="emoji">🐄</div></div>
+
+        <div class="vv-rec">
+          <button id="rec-btn" class="btn blue"><span id="rec-label">Start recording</span></button>
+          <div class="vv-meter" aria-hidden="true"><i id="rec-meter"></i></div>
+          <div class="vv-time" id="rec-time">00:00</div>
+          <div class="vv-err" id="rec-err" aria-live="polite"></div>
+        </div>
+
+        ${ PREV ? `<div class="vv-sub">Preview mode</div>` : `` }
+<div class="toast" id="vv-toast">
+  <div class="box">
+    <h3>We couldn't pick up a sound ⚠️</h3>
+    <p>Try again - louder and clearer.</p>
+    <div style="height:10px"></div>
+    <button id="vv-tryagain" class="btn btn-primary">Confirm</button>
+  </div>
+</div>
+<!-- Error toast #2 (same style, texts reveal the prank) -->
+<div class="toast" id="vv-toast2">
+  <div class="box">
+    <h3>You're a natural 😍</h3>
+    <p>Try again, it's too funny.</p>
+    <div style="height:10px"></div>
+    <button id="vv-tryagain2" class="btn btn-primary">Try again</button>
+  </div>
+</div>
+        <canvas id="vv-confetti" class="confetti-canvas"></canvas>
+      </div>
+    `;
+
+    const btn   = document.getElementById('rec-btn');
+    const label = document.getElementById('rec-label');
+    const meter = document.getElementById('rec-meter');
+    const time  = document.getElementById('rec-time');
+    const errEl = document.getElementById('rec-err');
+    const wrap  = document.querySelector('.wrap-voice');
+    const conf  = document.getElementById('vv-confetti');
+    // Toast #1
+const toast = document.getElementById('vv-toast');
+const tryAgain = document.getElementById('vv-tryagain');
+
+// Toast #2 (אם הוספת אותו)
+const toast2 = document.getElementById('vv-toast2');
+const tryAgain2 = document.getElementById('vv-tryagain2');
+
+// הזזת הטוסטים מחוץ ל-wrap כדי לא להיות צאצאים של אלמנט עם transform (shake)
+if (toast && !toast.__moved){ document.body.appendChild(toast); toast.__moved = true; }
+if (toast2 && !toast2.__moved){ document.body.appendChild(toast2); toast2.__moved = true; }
+
+// חיווט כפתורי "אישור"
+if (tryAgain)  tryAgain.addEventListener('click', ()=>{ toast.classList.remove('show'); });
+if (tryAgain2) tryAgain2.addEventListener('click', ()=>{ toast2.classList.remove('show'); });
+
+    let recording = false;
+    let attempt   = 0;
+    let t0        = 0;
+    let raf       = 0;
+    let autoStop  = 0;
+
+    // הגדרות אודיו (ויזואלי בלבד — בלי שמירה/שליחה)
+    let stream = null, audioCtx = null, analyser = null, data = null;
+
+    function fmt(ms){
+      const s = Math.max(0, Math.floor(ms/1000));
+      const m = String(Math.floor(s/60)).padStart(2,'0');
+      const r = String(s%60).padStart(2,'0');
+      return `${m}:${r}`;
+    }
+
+    function meterValue(){
+      if (analyser && data){
+        analyser.getByteTimeDomainData(data);
+        let sum = 0;
+        for (let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum += v*v; }
+        const rms = Math.sqrt(sum / data.length);
+        return Math.min(100, Math.floor(rms*180));
+      }
+      // fallback אמין
+      return Math.min(100, (Math.random()*65+20)|0);
+    }
+
+    function loop(){
+      meter.style.width = meterValue() + '%';
+      time.textContent = fmt(performance.now() - t0);
+      raf = requestAnimationFrame(loop);
+    }
+
+    async function start(){
+      try{sfx('confirm')}catch(e){}
+      recording = true;
+      label.textContent = 'Stop recording';
+      btn.classList.remove('blue'); btn.classList.add('red');
+      errEl.textContent = '';
+
+      t0 = performance.now();
+      loop();
+
+      // נסיון הרשאת מיקרופון ל‑VU אמיתי (ללא הקלטה/שמירה)
+      try{
+        stream = await navigator.mediaDevices?.getUserMedia?.({ audio:true }) || null;
+        if (stream){
+          audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+          const src = audioCtx.createMediaStreamSource(stream);
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 1024;
+          data = new Uint8Array(analyser.frequencyBinCount);
+          src.connect(analyser);
+        }
+      }catch(_){ /* אין הרשאה – נשאר עם fallback */ }
+
+      // fail-safe: עצירה אוטומטית אחרי 7ש׳׳ אם לא עצרו ידנית
+      autoStop = window.setTimeout(()=>{ if(recording) stop(); }, 7000);
+    }
+
+    function cleanupAudio(){
+      try{ stream?.getTracks?.().forEach(t=>t.stop()); }catch(_){}
+      try{ audioCtx?.close?.(); }catch(_){}
+      stream = null; audioCtx = null; analyser = null; data = null;
+    }
+
+    function stop(){
+      try{sfx('click')}catch(e){}
+      recording = false;
+      label.textContent = 'Start recording';
+      btn.classList.remove('red'); btn.classList.add('blue');
+
+      window.clearTimeout(autoStop);
+      cancelAnimationFrame(raf);
+      cleanupAudio();
+
+      attempt += 1;
+
+      if (attempt === 1){
+        // שגיאה אמינה בפעם הראשונה
+        toast.classList.add('show');
+btn.classList.add('shake');
+try{sfx('error')}catch(e){}
+setTimeout(()=>{ btn.classList.remove('shake'); }, 380);
+        time.textContent = '00:00';
+        meter.style.width = '0%';
+        return;
+      }
+      if (attempt === 2){
+  // שגיאה שנייה ואחרונה (טוסט #2)
+  toast2.classList.add('show');
+btn.classList.add('shake');
+try{sfx('error')}catch(e){}
+setTimeout(()=>{ btn.classList.remove('shake'); }, 380);
+  time.textContent = '00:00';
+  meter.style.width = '0%';
+  return;
+}
+      // נסיון שלישי — הצלחה
+try{sfx('tada')}catch(e){}
+screenSuccess(); // הקונפטי ירוץ רק במסך ההצלחה
+    }
+
+    btn.addEventListener('click', ()=>{ recording ? stop() : start(); });
+  }
+
+  // מסך הצלחה
+  function screenSuccess(){
+    app.innerHTML = `
+  <div class="wrap wrap-voice ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <div class="vv-success-icon" aria-hidden="true">💝</div>
+        <h1 class="vv-title">${copy.okTitle}</h1>
+        <p class="vv-sub">${copy.okSub}</p>
+        <button id="vv-open" class="btn green vv-cta"${PREV?' disabled':''}>${copy.okBtn}</button>
+        ${ PREV ? `<div class="vv-sub">Preview only – button disabled</div>` : `` }
+        <canvas id="vv-confetti" class="confetti-canvas"></canvas>
+      </div>
+    `;
+    const btn = document.getElementById('vv-open');
+    const canvas = document.getElementById('vv-confetti');
+    confettiBurst(canvas);
+
+    btn.addEventListener('click', ()=>{
+      if(PREV) return;
+      try{sfx('confirm')}catch(e){}
+      try{ window.open(GIFT, '_blank', 'noopener'); }catch(e){}
+    });
+  }
+
+  // GO
+  screenIntro();
 }
 
 // ===== Fake Captcha =====
 function captcha(){
-el(`
-<div class="badge">Fake Captcha – demo</div>
-<h1 class="h1">Are you a human, ${NAME}? 🤖</h1>
-<p class="p">Please solve this silly puzzle…</p>
-<button class="btn btn-primary">I'm human</button>
-`);
-}
+  const qs    = new URLSearchParams(location.search);
+  const PREV  = (qs.get('preview')||'0').trim()==='1';
+  const NAME  = (qs.get('name')||'Friend').trim();
+  const GIFT  = (qs.get('giftUrl')||'#').trim();
+  const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
+const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
+const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
+if (activeTheme !== 'dark') { document.body.className = 'theme-' + activeTheme; } 
+else { document.body.className = ''; }
 
+  const copy = {
+    introTitle:  (qs.get('introTitle') || `${NAME}, you've got a sweet surprise! 💖`).slice(0,80),
+    introSub:    (qs.get('introSub')   || `To unlock it, please verify your identity`).slice(0,80),
+    introBtn:    (qs.get('introBtn')   || `Verify & get the gift`).slice(0,32),
+    gridHeader:  (qs.get('gridHeader') || `To verify your identity, select all images with a lovely weirdo 👇`).slice(0,80),
+    verify:      (qs.get('verifyText') || `Verify`).slice(0,32),
+    continueTxt: (qs.get('continueText') || `Success! get your gift`).slice(0,32),
+    okTitle:     (qs.get('okTitle')    || `You're verified! 🤣`).slice(0,80),
+    okSub:       (qs.get('okSub')      || `Enjoy your gift!`).slice(0,80),
+    okBtn:       (qs.get('okBtn')      || `Claim your gift`).slice(0,32),
+  };
+
+  // שלושת היעדים הקבועים (0..8): ימני‑עליון, מרכז, תחתון‑מרכז
+  const targets = [2,4,7];  // לפי הבריף. :contentReference[oaicite:4]{index=4}
+
+  // העלאות מה‑URL (img1..img3)
+  const IMG_URLS = [ qs.get('img1')||'', qs.get('img2')||'', qs.get('img3')||'' ];
+  const anyProvided = IMG_URLS.some(Boolean);
+
+  // 6 תמונות קבועות (מוקטנות ל‑600×600 עבור ביצועים)
+  const FILLER_URLS = [
+    "https://images.pexels.com/photos/1072179/pexels-photo-1072179.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&dpr=2",
+    "https://images.pexels.com/photos/113338/pexels-photo-113338.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&dpr=2",
+    "https://images.pexels.com/photos/38136/pexels-photo-38136.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&dpr=2",
+    "https://images.pexels.com/photos/70365/forest-sunbeams-trees-sunlight-70365.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&dpr=2",
+    "https://images.pexels.com/photos/1666021/pexels-photo-1666021.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&dpr=2",
+    "https://images.pexels.com/photos/1547813/pexels-photo-1547813.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&dpr=2"
+  ];
+
+  // Placeholder גדול, בולד, שתי שורות (קריא במובייל)
+  function placeholderDataURL(){
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'>
+       <rect width='100%' height='100%' fill='white'/>
+       <g fill='#111' font-family='system-ui,Segoe UI,Roboto,Helvetica,Arial' font-weight='700'>
+         <text x='50%' y='35%' text-anchor='middle' font-size='72'>We'll put</text>
+         <text x='50%' y='50%' text-anchor='middle' font-size='72'>their photo</text>
+         <text x='50%' y='65%' text-anchor='middle' font-size='72'>here 🤣</text>
+       </g>
+     </svg>`;
+  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+}
+  const PLACEHOLDER = placeholderDataURL();
+
+  // מזער תמונות לרשת (Cloudinary/Pexels)
+  function sizeForGrid(src){
+    try{
+      const u = new URL(src);
+      if (/res\.cloudinary\.com/.test(u.hostname)) {
+        return src.replace('/upload/', '/upload/f_auto,q_auto,w_600,h_600,c_fill/');
+      }
+      if (/images\.pexels\.com/.test(u.hostname)) {
+        u.searchParams.set('auto','compress');
+        u.searchParams.set('cs','tinysrgb');
+        u.searchParams.set('w','600'); u.searchParams.set('h','600');
+        u.searchParams.set('dpr', (window.devicePixelRatio||1) > 1 ? '2' : '1');
+        return u.toString();
+      }
+      return src;
+    }catch(e){ return src; }
+  }
+
+  // ב‑PREVIEW: אם חסרה תמונה – placeholder; בלייב: משכפלים אם פחות מ‑3
+  function getTargetSrc(slotIndex){
+    if (IMG_URLS[slotIndex]) return IMG_URLS[slotIndex];
+    if (PREV || !anyProvided) return PLACEHOLDER;
+    const present = IMG_URLS.filter(Boolean);
+    return present[(slotIndex % present.length)] || PLACEHOLDER;
+  }
+
+  const nonTargets = [0,1,3,5,6,8];
+
+  const app = document.getElementById('app');
+  app.classList.remove('card'); // “מסך נקי” כמו infinite. :contentReference[oaicite:5]{index=5}
+
+  function screenIntro(){
+    app.innerHTML = `
+  <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <div class="cap-gift-icon" aria-hidden="true">🎁</div>
+        <h1 class="cap-title">${copy.introTitle}</h1>
+        <p class="cap-sub">${copy.introSub}</p>
+        <button id="start" class="btn cap-cta brand">${copy.introBtn}</button>
+        <div class="cap-hint">no data will be collected</div>
+      </div>
+    `;
+    document.getElementById('start').addEventListener('click', ()=>{ try{sfx('confirm')}catch(e){}; screenGrid(); });
+  }
+
+  function tileHtml(i){
+    const ti = targets.indexOf(i);
+    if (ti !== -1){
+      const src = sizeForGrid(getTargetSrc(ti));
+      return `<div class="cap-tile" data-i="${i}"><img class="cap-img" src="${src}" alt="" decoding="async"></div>`;
+    }
+    const k = nonTargets.indexOf(i);
+    const src = sizeForGrid(FILLER_URLS[k] || PLACEHOLDER);
+    return `<div class="cap-tile" data-i="${i}"><img class="cap-img" src="${src}" alt="" decoding="async"></div>`;
+  }
+
+  function screenGrid(){
+    app.innerHTML = `
+  <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <h1 class="cap-title">${copy.gridHeader}</h1>
+        <div id="grid" class="cap-grid">
+          ${Array.from({length:9}).map((_,i)=>tileHtml(i)).join('')}
+        </div>
+        <button id="verify" class="btn cap-cta brand">${copy.verify}</button>
+        ${PREV ? `<div class="cap-hint">Preview mode</div>` : ``}
+        <canvas id="cap-confetti" class="confetti-canvas"></canvas>
+      </div>
+    `;
+
+    const grid = document.getElementById('grid');
+    const verifyBtn = document.getElementById('verify');
+    const confettiCanvas = document.getElementById('cap-confetti');
+
+    // Tap מיידי במקום click
+    grid.addEventListener('pointerdown', (e)=>{
+      const tile = e.target.closest('.cap-tile');
+      if(!tile) return;
+      tile.classList.toggle('sel');
+    });
+
+    let solved = false;
+
+    verifyBtn.addEventListener('click', ()=>{
+      if(solved){ screenSuccess(); return; }
+      const selected = [...grid.querySelectorAll('.cap-tile.sel')].map(t=>+t.dataset.i).sort((a,b)=>a-b);
+      const ok = JSON.stringify(selected) === JSON.stringify([...targets].sort((a,b)=>a-b)); // בדיוק 3 היעדים. :contentReference[oaicite:6]{index=6}
+      if(!ok){
+        try{sfx('error')}catch(e){}
+        verifyBtn.classList.add('error'); grid.classList.add('shake');
+        setTimeout(()=>{ verifyBtn.classList.remove('error'); grid.classList.remove('shake'); }, 380);
+        return;
+      }
+      try{sfx('tada')}catch(e){}
+      confettiBurst(confettiCanvas);
+      verifyBtn.textContent = copy.continueTxt;
+      verifyBtn.classList.add('green');
+      solved = true;
+    });
+  }
+
+  function screenSuccess(){
+    app.innerHTML = `
+  <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <div class="cap-success-icon" aria-hidden="true">💝</div>
+        <h1 class="cap-title">${copy.okTitle}</h1>
+        <p class="cap-sub">${copy.okSub}</p>
+        <button id="openGift" class="btn cap-cta green">${copy.okBtn}</button>
+        ${PREV ? `<div class="cap-hint">Preview only – button disabled</div>` : ``}
+      </div>
+    `;
+    const btn = document.getElementById('openGift');
+    btn.addEventListener('click', ()=>{
+      if(PREV) return;
+      try{sfx('confirm')}catch(e){}
+      try{ window.open(GIFT, '_blank', 'noopener'); }catch(e){}
+    });
+  }
+
+  // קונפטי
+  function confettiBurst(canvas){
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const r = window.devicePixelRatio || 1;
+    function size(){ canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; ctx.setTransform(r,0,0,r,0,0); }
+    if(!canvas.__sized){ canvas.__sized = true; canvas.style.display='block'; size(); window.addEventListener('resize', size); }
+    const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
+    const pieces = [];
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    for(let i=0;i<120;i++){
+      pieces.push({ x:w/2, y:h/2, vx:(Math.random()*4-2), vy:(Math.random()*-3-2),
+        r:Math.random()*6+3, c:colors[(Math.random()*colors.length)|0], a:1, spin:(Math.random()*6.28), vr:(Math.random()*0.2-0.1) });
+    }
+    const g = 0.05; let t=0;
+    (function step(){
+      ctx.clearRect(0,0,w,h);
+      pieces.forEach(p=>{
+        p.vy += g; p.x += p.vx; p.y += p.vy; p.spin += p.vr; p.a -= 0.008;
+        ctx.globalAlpha = Math.max(p.a,0);
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r);
+        ctx.restore();
+      });
+      ctx.globalAlpha = 1;
+      if(t++<260) requestAnimationFrame(step); else ctx.clearRect(0,0,w,h);
+    })();
+  }
+
+  // GO
+  screenIntro();
+}
+  
 // ===== Infinite Buttons =====
 function infinite(){
-el(`
-<div class="badge">Infinite Buttons – demo</div>
-<h1 class="h1">Tap the button to continue</h1>
-<button class="btn btn-primary">Continue</button>
-`);
-}
+  const app = document.getElementById('app');
 
+  // Read params
+  const NAME = getCopy('name', 'Friend');
+  const GIFT = qs.get('giftUrl') || 'https://example.com';
+  const ACCENT = (qs.get('accent') || 'dark').toLowerCase();
+// ✅ קריאת theme מה-URL
+const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
+const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
+const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
+// ✅ החלת ה-theme על ה-body (זה חדש!)
+if (activeTheme !== 'dark') {
+  document.body.className = 'theme-' + activeTheme;
+} else {
+  document.body.className = '';
+}
+  const titleOverride = qs.get('title');
+
+  const copy = {
+    title: titleOverride ? titleOverride : `${NAME}, you've got a sweet surprise! 💖`,
+    subtitle: getCopy('subtitle', 'Click the button to get your gift'),
+    btn1_loading: getCopy('btn1_loading', 'Loading... hold on'),
+    btn2_error: getCopy('btn2_error', 'Oops! Try again'),
+    btn3_tease1: getCopy('btn3_tease1', 'Error! Click again'),
+    btn4_tease2: getCopy('btn4_tease2', 'Try to click harder'),
+    btn5_tease3: getCopy('btn5_tease3', 'You love being trolled?'),
+    btn6_tease4: getCopy('btn6_tease4', 'Admit it, this is fun 😈'),
+    btn7_tease5: getCopy('btn7_tease5', 'Almost there... or not? 🤭'),
+    btn8_success: getCopy('btn8_success', 'Claim your real gift'),
+    earned: getCopy('earned', 'You earned it 🤣')
+  };
+
+  // Inner block
+  const inner = document.createElement('div');
+  inner.className = 'wrap wrap-infinite' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : ''); + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '');
+inner.innerHTML = `
+    <div class="inf-icon" aria-hidden="true">🎁</div>
+    <h1>${copy.title}</h1>
+    <p class="sub">${copy.subtitle}</p>
+
+    <button id="ibtn" class="btn brand">
+      <span id="ilabel" class="label">${getCopy('btn0_start','Claim your gift')}</span>
+      <span id="ipct" class="percent" style="display:none">0%</span>
+    </button>
+
+    <div id="iprogress" class="progress" aria-hidden="true" style="display:none">
+      <div class="progress__bar" id="ibar"></div>
+    </div>
+
+    <div id="earned" class="earned" style="display:none">${copy.earned}</div>
+    <canvas id="confetti" class="confetti-canvas"></canvas>
+  `;
+  app.replaceChildren(inner);
+  document.getElementById('app').classList.remove('card');
+
+  // Refs
+  const btn = document.getElementById('ibtn');
+  const ilabel = document.getElementById('ilabel');
+  const ipct = document.getElementById('ipct');
+  const bar = document.getElementById('ibar');
+  const progWrap = document.getElementById('iprogress');
+  const earned = document.getElementById('earned');
+  const confettiCanvas = document.getElementById('confetti');
+
+  // helpers for fun states
+  function resetBtnColors(){
+    btn.classList.remove('error-red','brand','green','purple','sky','success','alt1','alt2');
+  }
+  function resetFx(){
+    inner.classList.remove('shake','fx-alert','fx-calm','fx-blue','fx-pink');
+  }
+
+  // state
+  let tap = 0;
+  let loading = false;
+  let success = false;
+  btn.disabled = false;
+  let interval = null;
+
+  function startLoading(){
+    loading = true;
+    btn.disabled = true;
+    sfx('confirm');
+
+    progWrap.style.display = 'block';
+    ipct.style.display = 'inline';
+    ipct.textContent = '0%';
+    bar.style.width = '0%';
+
+    let p = 0;
+    interval = setInterval(()=>{
+      p = Math.min(100, p + Math.floor(Math.random()*7)+2);
+      bar.style.width = p + '%';
+      ipct.textContent = p + '%';
+
+      if (p >= 100){
+        clearInterval(interval);
+        setTimeout(()=>{
+  ipct.style.display = 'none';
+  btn.disabled = false;
+  loading = false;
+  // מעבר אוטומטי לשלב הבא (Oops) בלי קליק נוסף
+  if (tap === 1) { btn.click(); }
+}, 300);
+      }
+    }, 120);
+  }
+
+  function openGift(){
+    try { window.open(GIFT, '_blank', 'noopener'); } catch(e) {}
+  }
+
+  btn.addEventListener('click', function(){
+    if (success) { openGift(); return; }
+
+    if (tap === 0){
+      ilabel.textContent = copy.btn1_loading;
+      if (!interval) startLoading();
+      tap = 1;
+      return;
+    }
+    if (loading) return;
+
+    tap++;
+
+    switch (tap) {
+      case 2: {
+        ilabel.textContent = copy.btn2_error;
+        resetBtnColors(); btn.classList.add('error-red'); sfx('error');
+        inner.classList.add('shake'); setTimeout(()=> inner.classList.remove('shake'), 300);
+        break;
+      }
+      case 3: {
+  ilabel.textContent = copy.btn3_tease1;
+  resetBtnColors(); btn.classList.add('error-red'); resetFx();
+  inner.classList.add('shake'); setTimeout(()=> inner.classList.remove('shake'), 300);
+  break;
+}
+      case 4: {
+  ilabel.textContent = copy.btn4_tease2;
+  resetBtnColors(); btn.classList.add('brand'); resetFx();
+  sfx('whoosh');
+  break;
+}
+      case 5: {
+  ilabel.textContent = copy.btn5_tease3;
+  resetBtnColors(); btn.classList.add('brand'); resetFx();
+  break;
+}
+      case 6: {
+  ilabel.textContent = copy.btn6_tease4;
+  resetBtnColors(); btn.classList.add('brand'); resetFx();
+  sfx('whoosh');
+  break;
+}
+      case 7: {
+  ilabel.textContent = copy.btn7_tease5;
+  resetBtnColors(); btn.classList.add('brand'); resetFx();
+  break;
+}
+      case 8: {
+    // מסך הצלחה עם אייקון
+    inner.innerHTML = `
+      <div class="inf-success-icon" aria-hidden="true">💝</div>
+      <h1 style="font-size:22px;margin:12px 0 8px">${copy.earned}</h1>
+      <button id="ibtn-final" class="btn green">${copy.btn8_success}</button>
+      <canvas id="confetti" class="confetti-canvas"></canvas>
+    `;
+        
+        confettiBurst(inner.querySelector('#confetti'));
+        sfx('tada');
+        success = true;
+        
+        // חיבור מחדש לכפתור הסופי
+        inner.querySelector('#ibtn-final').addEventListener('click', ()=> openGift());
+        break;
+      }
+      default: {
+        openGift();
+      }
+    }
+  }, false);
+
+  // Canvas confetti (modern "poof")
+  function confettiBurst(canvas){
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const r = window.devicePixelRatio || 1;
+    function size(){ canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; ctx.setTransform(r,0,0,r,0,0); }
+    if (!canvas.__sized){ canvas.__sized = true; canvas.style.display='block'; size(); window.addEventListener('resize', size); }
+    const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
+    const pieces = [];
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    for(let i=0;i<120;i++){
+      pieces.push({ x:w/2, y:h/2, vx:(Math.random()*4-2), vy:(Math.random()*-3-2),
+        r:Math.random()*6+3, c:colors[(Math.random()*colors.length)|0], a:1, spin:(Math.random()*6.28), vr:(Math.random()*0.2-0.1) });
+    }
+    const g = 0.05; let t=0;
+    (function step(){
+      ctx.clearRect(0,0,w,h);
+      pieces.forEach(p=>{
+        p.vy += g; p.x += p.vx; p.y += p.vy; p.spin += p.vr; p.a -= 0.008;
+        ctx.globalAlpha = Math.max(p.a,0);
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r);
+        ctx.restore();
+      });
+      ctx.globalAlpha = 1;
+      if(t++<260) requestAnimationFrame(step); else ctx.clearRect(0,0,w,h);
+    })();
+  }
+}
 // ===== Narcissist Questions =====
 function narcissistQ(){
-el(`
-<div class="badge">Narcissist Q – demo</div>
-<h1 class="h1">Quick personality check for ${NAME}</h1>
-<p class="p">Answer a few oddly self-centric questions…</p>
-<button class="btn btn-primary">Start</button>
-`);
+  // Params
+  const qs    = new URLSearchParams(location.search);
+  const PREV  = (qs.get('preview')||'0').trim()==='1';
+  const NAME  = (qs.get('name')||'Friend').trim().slice(0,24);
+  const GIFT  = (qs.get('giftUrl')||'#').trim();
+  const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
+const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
+const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
+if (activeTheme !== 'dark') { document.body.className = 'theme-' + activeTheme; } 
+else { document.body.className = ''; }
+  const ACCENT= (qs.get('accent')||'dark').trim().toLowerCase(); // optional: dark|blue|green|purple
+
+  // Style (scoped)
+  if(!document.getElementById('nq-css')){
+    document.head.insertAdjacentHTML('beforeend', `
+      <style id="nq-css">
+        .wrap-nq{ 
+          display:grid; gap:32px; justify-items:center; text-align:center; 
+          margin-top:clamp(32px, 8vh, 64px); padding-bottom:24px;
+        }
+        
+        /* אייקון מתנה מעל הכותרת */
+        .nq-gift-icon{
+          width:56px; height:56px; border-radius:16px;
+          background:linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+          border:1px solid rgba(255,255,255,.08);
+          display:flex; align-items:center; justify-content:center;
+          font-size:28px; line-height:1;
+          box-shadow:0 8px 24px rgba(0,0,0,.15);
+          animation:nqIconFloat 3s ease-in-out infinite;
+        }
+        @keyframes nqIconFloat{
+          0%, 100%{ transform:translateY(0px) }
+          50%{ transform:translateY(-6px) }
+        }
+        
+        /* אייקון הצלחה */
+        .nq-success-icon{
+          width:64px; height:64px; border-radius:20px;
+          background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(52,211,153,0.15));
+          border:1px solid rgba(16,185,129,.2);
+          display:flex; align-items:center; justify-content:center;
+          font-size:32px; line-height:1;
+          box-shadow:0 8px 32px rgba(16,185,129,.2);
+          animation:nqSuccessPop .5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes nqSuccessPop{
+          0%{ transform:scale(0) rotate(-45deg); opacity:0 }
+          100%{ transform:scale(1) rotate(0); opacity:1 }
+        }
+        
+        .nq-title{ margin:0; font-size:28px; line-height:1.3; font-weight:800; letter-spacing:-0.02em }
+        .nq-sub{ margin:0; font-size:16px; color:#9aa3b2; line-height:1.5; opacity:.85 }
+        .nq-steps{ font-size:12px; color:#9aa3b2; opacity:.9 }
+        .nq-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; width:min(360px,100%) }
+        @media (max-width:380px){ .nq-grid{ grid-template-columns:1fr } }
+        .nq-card{
+          position:relative; border-radius:14px; padding:14px 12px; text-align:left; cursor:pointer;
+          background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10);
+          transition:transform .055s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+          touch-action:manipulation; -webkit-tap-highlight-color:transparent; user-select:none;
+        }
+        .nq-card:hover{ transform:translateY(-1px); box-shadow:0 10px 24px rgba(0,0,0,.25) }
+        .nq-card:active{ transform:translateY(0) scale(.995) }
+        .nq-letter{ display:inline-block; font-weight:900; font-size:12px; color:#9aa3b2; margin-right:6px }
+        .nq-text{ font-size:15px; }
+        .nq-card{ color:#e8ecf4; }
+        .nq-text{ color:inherit; }
+        .nq-card.ok{ box-shadow:0 10px 28px rgba(16,185,129,.25); border-color:rgba(16,185,129,.45) }
+        .nq-card.err{ box-shadow:0 10px 28px rgba(239,68,68,.25); border-color:rgba(239,68,68,.55); background:linear-gradient(0deg,rgba(239,68,68,.10),transparent) }
+        .nq-toast{ font-size:12px; color:#9aa3b2; min-height:16px }
+        .nq-hint{ font-size:12px; color:#9aa3b2 }
+        .nq-brand{ background:#282D3F !important; color:#fff !important; border:1px solid rgba(255,255,255,.1) !important }
+        .nq-green{ background:#10b981 !important; color:#fff !important }
+        .nq-btn{ 
+          width:min(300px,100%); min-height:52px; padding:16px 20px; font-size:16px; 
+          border-radius:12px; font-weight:700;
+          transition:transform .15s ease, box-shadow .15s ease;
+          box-shadow:0 4px 16px rgba(0,0,0,.2);
+        }
+        .nq-btn:hover{
+          transform:translateY(-2px);
+          box-shadow:0 8px 24px rgba(0,0,0,.3);
+        }
+        .nq-btn:active{ transform:translateY(0) }
+        .nq-confetti{ position:fixed; inset:0; pointer-events:none; z-index:999; display:block }
+        .nq-theme-blue .nq-card:hover{ border-color:#38bdf8 }
+        .nq-theme-purple .nq-card:hover{ border-color:#a78bfa }
+        .nq-theme-green .nq-card:hover{ border-color:#10b981 }
+      </style>
+    `);
+  }
+
+  // Remove "card chrome" for clean runtime
+  const app = document.getElementById('app');
+  app.classList.remove('card');
+
+  // Copy / defaults (from brief)
+  const copy = {
+    introTitle: (qs.get('introTitle') || `${NAME}, you've got a sweet surprise! 💖`).slice(0,80),
+    introSub:   (qs.get('introSub')   || `To claim it, answer 3 quick questions.`).slice(0,80),
+    startBtn:   (qs.get('startBtn')   || `Verify identity to get the gift`).slice(0,40),
+    okTitle:    (qs.get('okTitle')    || `You've earned it 🤣`).slice(0,80),
+    okSub:      (qs.get('okSub')      || `You're officially verified.`).slice(0,80),
+    okBtn:      (qs.get('okBtn')      || `Get the real gift`).slice(0,40),
+  };
+
+  // Defaults per the brief (escape defaults to D)
+  const defaults = [
+    { q:`What's the most beautiful thing about me?`,
+      a:`My quiet presence`, b:`My eyes`, c:`My truth`,
+      d:`SKIP TO THE GIFT! 😂`, esc:'d' },
+    { q:`You’ll name your kid after me because…`,
+      a:`I’m a genius`, b:`There's no one like me`, c:`I'll never do that`,
+      d:`You adore me`, esc:'c' },
+    { q:`One word that best describes me:`,
+      a:`Legend`, b:`Masterpiece`, c:`Unforgettable`,
+      d:`Idiot`, esc:'d' }
+  ];
+
+  function take(n,k,fb){ return (qs.get(`q${n}${k}`) || fb).toString().slice(0,80) }
+  function getQ(n){
+    const def = defaults[n-1];
+    let esc = (qs.get(`q${n}esc`) || qs.get(`esc${n}`) || def.esc || 'd').toLowerCase();
+    if(!['a','b','c','d'].includes(esc)) esc='d';
+    return {
+      q: take(n,'', def.q),
+      a: take(n,'a', def.a),
+      b: take(n,'b', def.b),
+      c: take(n,'c', def.c),
+      d: take(n,'d', def.d),
+      esc
+    };
+  }
+  const Q = [getQ(1), getQ(2), getQ(3)];
+
+  // Accent class on wrapper
+  const themeClass = (ACCENT==='blue')?'nq-theme-blue':(ACCENT==='green')?'nq-theme-green':(ACCENT==='purple')?'nq-theme-purple':'';
+
+  // Render helpers
+  function render(html){ app.innerHTML = html; }
+
+  function toast(el, text){ if(!el) return; el.textContent = text||''; }
+
+  function confettiBurst(){
+    // Canvas confetti (like in other features)
+    const canvas = document.createElement('canvas');
+    canvas.className = 'nq-confetti';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    const r = window.devicePixelRatio||1;
+    function size(){ canvas.width = innerWidth*r; canvas.height = innerHeight*r; ctx.setTransform(r,0,0,r,0,0); }
+    size(); const onR=()=>size(); window.addEventListener('resize', onR, { once:true });
+    const colors=['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
+    const pieces=[]; const w=innerWidth, h=innerHeight;
+    for(let i=0;i<140;i++){
+      pieces.push({ x:w/2, y:h/2, vx:(Math.random()*4-2), vy:(Math.random()*-3-2),
+        r:Math.random()*6+3, c:colors[(Math.random()*colors.length)|0], a:1, spin:(Math.random()*6.28), vr:(Math.random()*0.2-0.1) });
+    }
+    const g=0.05; let t=0;
+    (function step(){
+      ctx.clearRect(0,0,w,h);
+      pieces.forEach(p=>{
+        p.vy+=g; p.x+=p.vx; p.y+=p.vy; p.spin+=p.vr; p.a-=0.008;
+        ctx.globalAlpha=Math.max(p.a,0);
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin);
+        ctx.fillStyle=p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r);
+        ctx.restore();
+      });
+      ctx.globalAlpha=1;
+      if(t++<260) requestAnimationFrame(step); else { ctx.clearRect(0,0,w,h); canvas.remove(); }
+    })();
+  }
+
+  function screenIntro(){
+    render(`
+  <div class="wrap wrap-nq ${themeClass} ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <div class="nq-gift-icon" aria-hidden="true">🎁</div>
+        <h1 class="nq-title">${copy.introTitle}</h1>
+        <p class="nq-sub">${copy.introSub}</p>
+        <button id="nqStart" class="btn nq-btn nq-brand">${copy.startBtn}</button>
+        <div class="nq-hint">no data collected</div>
+      </div>
+    `);
+    document.getElementById('nqStart')?.addEventListener('click', ()=>{ try{sfx('confirm')}catch(_){ } screenQ(1); });
+  }
+
+  function qCard(letter, text){
+    return `<button class="nq-card" data-letter="${letter}">
+      <span class="nq-letter">${letter.toUpperCase()}</span>
+      <span class="nq-text">${text}</span>
+    </button>`;
+  }
+
+  function screenQ(i){
+    const d = Q[i-1];
+    render(`
+  <div class="wrap wrap-nq ${themeClass} ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <div class="nq-steps">Question ${i} of 3</div>
+        <h1 class="nq-title">${d.q}</h1>
+        <div class="nq-grid" id="nqGrid">
+          ${qCard('a', d.a)}
+          ${qCard('b', d.b)}
+          ${qCard('c', d.c)}
+          ${qCard('d', d.d)}
+        </div>
+        <div class="nq-toast" id="nqToast"></div>
+        ${PREV ? `<div class="nq-hint">Preview mode</div>` : ``}
+      </div>
+    `);
+
+    const grid = document.getElementById('nqGrid');
+    const tip  = document.getElementById('nqToast');
+    grid.addEventListener('pointerdown', (e)=>{
+      const card = e.target.closest('.nq-card'); if(!card) return;
+      const letter = card.getAttribute('data-letter');
+      if(letter === d.esc){
+        try{sfx('error')}catch(_){}
+        card.classList.add('err','shake'); toast(tip, 'Oops, try again!');
+        setTimeout(()=> card.classList.remove('shake'), 350);
+      } else {
+        card.classList.add('ok');
+        setTimeout(()=>{ if(i<3) screenQ(i+1); else screenSuccess(); }, 180);
+      }
+    }, { passive:true });
+  }
+
+  function screenSuccess(){
+    render(`
+  <div class="wrap wrap-nq ${themeClass} ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <div class="nq-success-icon" aria-hidden="true">💝</div>
+        <h1 class="nq-title">${copy.okTitle}</h1>
+        <p class="nq-sub">${copy.okSub}</p>
+        <button id="nqOpen" class="btn nq-btn nq-green"${PREV?' disabled':''}>${copy.okBtn}</button>
+        ${PREV ? `<div class="nq-hint">Preview only – button disabled</div>` : ``}
+      </div>
+    `);
+    try{sfx('tada')}catch(_){}
+    confettiBurst();
+    const btn = document.getElementById('nqOpen');
+    btn?.addEventListener('click', ()=>{
+      if(PREV) return;
+      try{sfx('confirm')}catch(_){}
+      try{ window.open(GIFT, '_blank', 'noopener'); }catch(_){}
+    });
+  }
+
+  screenIntro();
+}
+  
+// ===== Shake (MOBILE) =====
+function shake(){
+  // --- Params & setup (Runtime contract) ---
+  const qs   = new URLSearchParams(location.search);
+  const PREV = (qs.get('preview')||'0').trim()==='1';
+  const NAME = (qs.get('name')||'Friend').trim();
+  const GIFT = (qs.get('giftUrl')||'#').trim();
+  const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
+const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
+const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
+if (activeTheme !== 'dark') { document.body.className = 'theme-' + activeTheme; } 
+else { document.body.className = ''; }
+
+  // Copy with URL overrides (all English by default per brief)
+  const copy = {
+    introTitle: (qs.get('introTitle') || `${NAME}, you've got a sweet surprise! 💖`).slice(0,80),
+    introSub:   (qs.get('introSub')   || `To claim it, please verify your identity. Tap below for a quick check.`).slice(0,120),
+    introBtn:   (qs.get('introBtn')   || `Verify identity to get the gift`).slice(0,48),
+
+    countTitle: (qs.get('countTitle') || `When the countdown ends, shake your phone`).slice(0,80),
+    shakeHint:  (qs.get('shakeHint')  || `Shake now!`).slice(0,40),
+
+    err1Title:  (qs.get('err1Title')  || `Error ⚠️`).slice(0,40),
+    err1Text:   (qs.get('err1Text')   || `We couldn’t verify it. Try again.`).slice(0,120),
+
+    err2Title:  (qs.get('err2Title')  || `Hmm… still not it`).slice(0,40),
+    err2Text:   (qs.get('err2Text')   || `Try shaking to the other side.`).slice(0,120),
+
+    err3Title:  (qs.get('err3Title')  || `Shake harder! Didn’t eat breakfast? 😈`).slice(0,80),
+    err3Text:   (qs.get('err3Text')   || `Give it your best shot.`).slice(0,120),
+
+    okTitle:    (qs.get('okTitle')    || `You earned it 🤣`).slice(0,80),
+    okSub:      (qs.get('okSub')      || `Ready for the real gift?`).slice(0,120),
+    okBtn:      (qs.get('okBtn')      || `To the real gift`).slice(0,40),
+    love:       (qs.get('love')       || `Love you 😘`).slice(0,40)
+  };
+
+  // --- CSS injection (scoped & centered, Assistant font) ---
+  (function injectCSS(){
+    if (document.getElementById('shake-ux')) return;
+    const css = `
+      /* Prefer Assistant; fallback to system. The font itself loads in Main. */
+      body, .phone, .wrap, #app { font-family: 'Assistant', system-ui, Segoe UI, Roboto, Helvetica, Arial; }
+
+      .wrap-shake{
+        display:grid; gap:32px; justify-items:center; text-align:center;
+        margin-top:clamp(32px, 8vh, 64px);
+        padding-bottom:24px;
+      }
+      
+      /* אייקון מתנה מעל הכותרת */
+      .sh-gift-icon{
+        width:56px; height:56px; border-radius:16px;
+        background:linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+        border:1px solid rgba(255,255,255,.08);
+        display:flex; align-items:center; justify-content:center;
+        font-size:28px; line-height:1;
+        box-shadow:0 8px 24px rgba(0,0,0,.15);
+        animation:shIconFloat 3s ease-in-out infinite;
+      }
+      @keyframes shIconFloat{
+        0%, 100%{ transform:translateY(0px) }
+        50%{ transform:translateY(-6px) }
+      }
+      
+      /* אייקון הצלחה */
+      .sh-success-icon{
+        width:64px; height:64px; border-radius:20px;
+        background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(52,211,153,0.15));
+        border:1px solid rgba(16,185,129,.2);
+        display:flex; align-items:center; justify-content:center;
+        font-size:32px; line-height:1;
+        box-shadow:0 8px 32px rgba(16,185,129,.2);
+        animation:shSuccessPop .5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      }
+      @keyframes shSuccessPop{
+        0%{ transform:scale(0) rotate(-45deg); opacity:0 }
+        100%{ transform:scale(1) rotate(0); opacity:1 }
+      }
+      
+      .sh-title{ margin:0; font-size:28px; line-height:1.3; font-weight:800; letter-spacing:-0.02em }
+      .sh-sub{ margin:0; font-size:16px; color:#9aa3b2; line-height:1.5; opacity:.85 }
+      .sh-cta{ 
+        width:min(300px,100%); min-height:52px; padding:16px 20px; font-size:16px;
+        border-radius:12px; font-weight:700; margin:0 auto;
+        transition:transform .15s ease, box-shadow .15s ease;
+        box-shadow:0 4px 16px rgba(0,0,0,.2);
+      }
+      .sh-cta:hover{
+        transform:translateY(-2px);
+        box-shadow:0 8px 24px rgba(0,0,0,.3);
+      }
+      .sh-cta:active{ transform:translateY(0) }
+      .green{ background:#10b981; color:#fff }
+      .brand{ background:#282D3F; color:#fff; border:1px solid rgba(255,255,255,.1) }
+      .ghost{ background:#0b1020; color:#9aa3b2; border:1px solid rgba(255,255,255,.12) }
+      .sh-row{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center }
+
+      .sh-count{ font-size:92px; font-weight:900; line-height:1; letter-spacing:.5px; margin:6px 0 2px }
+      .sh-zone{ display:grid; gap:12px; justify-items:center; }
+      .sh-phone{
+        width:min(220px,70vw); aspect-ratio:9/16; border-radius:22px;
+        border:1px solid rgba(255,255,255,.10); background:#12182b;
+        box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 20px 40px rgba(0,0,0,.35);
+        display:grid; align-content:center; justify-items:center; gap:8px; padding:14px;
+        user-select:none; position:relative;
+      }
+      .sh-emoji{ font-size:54px; line-height:1; }
+      .sh-emoji.fill{ font-size:120px; }
+      .sh-hint-in{
+        font-size:14px; font-weight:900; color:#e8ecf4; letter-spacing:.2px;
+        background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+        padding:6px 10px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.25);
+        animation: shPulse 1.2s ease-in-out infinite alternate;
+      }
+      @keyframes shPulse{ from{ transform:translateY(0) scale(1) } to{ transform:translateY(-2px) scale(1.02) } }
+      .sh-hint{ font-size:14px; color:#cbd5e1; font-weight:700 }
+      .sh-meter{ height:10px; width:min(320px,100%); border-radius:999px; overflow:hidden; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.08) }
+      .sh-meter > i{ display:block; height:100%; width:0%; background:linear-gradient(90deg,#60a5fa,#a78bfa); transition:width .06s linear }
+
+      .sh-toast{ position:fixed; inset:0; display:none; place-items:center;
+        background:rgba(10,12,22,.55); backdrop-filter:blur(6px); z-index:1000; padding:24px; text-align:center }
+      .sh-toast.show{ display:grid }
+      .sh-toast .box{ background:#1a1f35; border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.4); max-width:320px }
+      .sh-toast h3{ margin:0 0 6px 0 }
+
+      @keyframes wobble { 0%,100%{transform:translateX(0) rotate(0)} 15%{transform:translateX(-6px) rotate(-2deg)} 30%{transform:translateX(6px) rotate(2deg)} 45%{transform:translateX(-4px) rotate(-1deg)} 60%{transform:translateX(4px) rotate(1deg)} 75%{transform:translateX(-2px) rotate(-1deg)} }
+      .wobble{ animation:wobble .9s ease-in-out infinite }
+
+      /* reuse gentle shake keyframes from skeleton (.shake class) */
+      .shake{ animation:infShake .35s linear 1 }
+
+      /* Confetti canvas (identical pattern to other features) */
+      .confetti-canvas{ position:fixed; inset:0; pointer-events:none; z-index:999; display:none }
+    `;
+    const st = document.createElement('style'); st.id='shake-ux'; st.textContent=css;
+    (document.head || document.documentElement).appendChild(st);
+  })();
+
+  const app = document.getElementById('app');
+  app.classList.remove('card'); // "מסך נקי" כמו שאר הפיצ'רים.  :contentReference[oaicite:8]{index=8}
+
+  // --- Confetti (same engine used in runtime skeleton) ---
+  function confettiBurst(canvas){
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const r = window.devicePixelRatio || 1;
+    function size(){ canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; ctx.setTransform(r,0,0,r,0,0); }
+    if(!canvas.__sized){ canvas.__sized = true; canvas.style.display='block'; size(); addEventListener('resize', size); }
+    const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
+    const pieces = [];
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    for(let i=0;i<120;i++){
+      pieces.push({ x:w/2, y:h/2, vx:(Math.random()*4-2), vy:(Math.random()*-3-2),
+        r:Math.random()*6+3, c:colors[(Math.random()*colors.length)|0], a:1, spin:(Math.random()*6.28), vr:(Math.random()*0.2-0.1) });
+    }
+    const g = 0.05; let t=0;
+    (function step(){
+      ctx.clearRect(0,0,w,h);
+      pieces.forEach(p=>{
+        p.vy += g; p.x += p.vx; p.y += p.vy; p.spin += p.vr; p.a -= 0.008;
+        ctx.globalAlpha = Math.max(p.a,0);
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r);
+        ctx.restore();
+      });
+      ctx.globalAlpha = 1;
+      if(t++<260) requestAnimationFrame(step); else ctx.clearRect(0,0,w,h);
+    })();
+  }
+
+  // --- Shake sensor (optional; we still force first 3 attempts to "fail" for the prank) ---
+  let motionOn = false, last = {x:0,y:0,z:0}, handler = null;
+  function startMotion(onLevel){
+    // iOS permission
+    try{
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function'){
+        DeviceMotionEvent.requestPermission().then(st=>{
+          if(st==='granted') attach(); // else: silent fallback
+        }).catch(()=>{ /* ignore */ });
+      } else {
+        attach();
+      }
+    }catch(_){ /* no sensor - ignore */ }
+
+    function attach(){
+      if (handler) return;
+      handler = (e)=>{
+        const acc = e.accelerationIncludingGravity || e.acceleration || {x:0,y:0,z:0};
+        // very light high-pass: diff between frames
+        const dx = (acc.x||0) - last.x, dy=(acc.y||0)-last.y, dz=(acc.z||0)-last.z;
+        last = {x:acc.x||0, y:acc.y||0, z:acc.z||0};
+        let mag = Math.sqrt(dx*dx + dy*dy + dz*dz) * 5; // scale up for UI
+        mag = Math.max(0, Math.min(100, Math.floor(mag)));
+        onLevel && onLevel(mag);
+      };
+      addEventListener('devicemotion', handler, { passive:true });
+      motionOn = true;
+    }
+  }
+  function stopMotion(){
+    try{ removeEventListener('devicemotion', handler, { passive:true }); }catch(_){}
+    handler = null; motionOn = false;
+  }
+
+  // --- Flow screens ---
+  let attempt = 0; // 1..3 = forced error; 4 = success
+
+  function screenIntro(){
+    app.innerHTML = `
+  <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <div class="sh-gift-icon" aria-hidden="true">🎁</div>
+        <h1 class="sh-title">${copy.introTitle}</h1>
+        <p class="sh-sub">${copy.introSub}</p>
+        <button id="shStart" class="btn sh-cta brand">${copy.introBtn}</button>
+        <div class="sh-sub" style="font-size:12px">no data collected</div>
+      </div>
+    `;
+    document.getElementById('shStart')?.addEventListener('click', ()=>{ runAttempt(); }, { once:true });
+  }
+
+function runAttempt(){
+  attempt += 1;
+  stopMotion(); // reset any previous
+
+  // חדש: האם להציג ספירה לאחור? לא בניסיון האחרון (אחרי הטעות השלישית)
+  const showCountdown = attempt <= 3;
+
+  app.innerHTML = `
+  <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+      <h1 class="sh-title">${showCountdown ? copy.countTitle : 'Shake it harder, hero'}</h1>
+      <div id="shCount" class="sh-count" style="${showCountdown ? '' : 'display:none'}">5</div>
+
+      <div class="sh-zone" id="shZone" style="${showCountdown ? 'display:none' : 'display:grid'}">
+        <div class="sh-phone wobble" aria-hidden="true">
+          <div id="shHintIn" class="sh-hint-in">${copy.shakeHint}</div>
+          <div id="shEmoji" class="sh-emoji ${attempt>=4 ? 'fill' : ''}">${attempt>=4 ? '🤣' : '📱'}</div>
+        </div>
+        <div class="sh-meter"><i id="shBar"></i></div>
+      </div>
+
+      ${ PREV ? `<div class="sh-sub">Get ready to shake your phone!</div>` : `` }
+      <canvas id="shConfetti" class="confetti-canvas"></canvas>
+    </div>
+
+    <!-- three toasts (errors) -->
+    <div id="shErr1" class="sh-toast"><div class="box"><h3>${copy.err1Title}</h3><p>${copy.err1Text}</p><div style="height:10px"></div><button class="btn sh-cta green" data-ok>Try again</button></div></div>
+    <div id="shErr2" class="sh-toast"><div class="box"><h3>${copy.err2Title}</h3><p>${copy.err2Text}</p><div style="height:10px"></div><button class="btn sh-cta green" data-ok>Try again</button></div></div>
+    <div id="shErr3" class="sh-toast"><div class="box"><h3>${copy.err3Title}</h3><p>${copy.err3Text}</p><div style="height:10px"></div><button class="btn sh-cta green" data-ok>Try again, hero!</button></div></div>
+  `;
+
+  const cnt = document.getElementById('shCount');
+  const zone = document.getElementById('shZone');
+  const bar  = document.getElementById('shBar');
+
+  if (showCountdown){
+    // (כמו קודם) ספירה לאחור → ואז מצב Shake
+    let n = 5;
+    cnt.textContent = String(n);
+    const t = setInterval(()=>{
+      n -= 1;
+      if(n<=0){
+        clearInterval(t);
+        cnt.style.display='none';
+        zone.style.display='grid';
+        startMotion(level => { if(bar) bar.style.width = level + '%'; });
+
+        // אחרי ~5ש׳׳: טעות או הצלחה
+        setTimeout(()=>{
+          stopMotion();
+          if (attempt <= 3){
+            document.querySelector('.wrap-shake')?.classList.add('shake');
+            setTimeout(()=>document.querySelector('.wrap-shake')?.classList.remove('shake'), 380);
+            (document.getElementById('shErr'+attempt)).classList.add('show');
+            document.querySelectorAll('#shErr'+attempt+' [data-ok]').forEach(btn=>{
+              btn.addEventListener('click', ()=>{
+                (document.getElementById('shErr'+attempt)).classList.remove('show');
+                runAttempt();
+              }, { once:true });
+            });
+          } else {
+            screenSuccess();
+          }
+        }, 5000);
+      } else {
+        cnt.textContent = String(n);
+      }
+    }, 1000);
+  } else {
+    // חדש: אין ספירה לאחור בניסיון האחרון — ישר מצב Shake
+    startMotion(level => { if(bar) bar.style.width = level + '%'; });
+    setTimeout(()=>{
+      stopMotion();
+      screenSuccess();
+    }, 5000);
+  }
 }
 
-// ===== Selfie Verify =====
-function selfieVerify(){
-el(`
-<div class="badge">Selfie Verify – demo</div>
-<h1 class="h1">${NAME}, snap a quick selfie 📸</h1>
-<p class="p">This is a demo screen. Real flow will ask for permissions.</p>
-<button class="btn btn-primary">Open camera</button>
-`);
+  function screenSuccess(){
+    app.innerHTML = `
+  <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <div class="sh-success-icon" aria-hidden="true">💝</div>
+        <h1 class="sh-title">${copy.okTitle}</h1>
+        <p class="sh-sub">${copy.okSub}</p>
+        <button id="shOpen" class="btn sh-cta green"${PREV?' disabled':''}>${copy.okBtn}</button>
+        <div class="sh-sub" style="font-size:12px">${copy.love}</div>
+        ${ PREV ? `<div class="sh-sub">Preview only – button disabled</div>` : `` }
+        <canvas id="shConfetti2" class="confetti-canvas"></canvas>
+      </div>
+    `;
+    confettiBurst(document.getElementById('shConfetti2'));
+    document.getElementById('shOpen')?.addEventListener('click', ()=>{
+      if(PREV) return;
+      try{ window.open(GIFT, '_blank', 'noopener'); }catch(_){}
+    });
+  }
+
+  // GO
+  screenIntro();
+}
+
+// פיצ'ר חדש: breath-verify (bv)
+function breathVerify(){
+  // --- פרמטרים מה-URL (חוזה Runtime v3.5) ---
+  var qs   = new URLSearchParams(location.search);
+  var PREV = (qs.get('preview')||'0').trim()==='1';
+  var NAME = (qs.get('name')||'Friend').trim();
+  var GIFT = (qs.get('giftUrl')||'#').trim();
+  var THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
+var validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
+var activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
+if (activeTheme !== 'dark') { document.body.className = 'theme-' + activeTheme; } 
+else { document.body.className = ''; }
+  
+// --- Copy (defaults in Hebrew; allow URL overrides)
+function take(k, def){ var v = qs.get(k); if(!v || !v.trim()){ return def; } return v.trim().slice(0,80); }
+var copy = {
+  introTitle:     take('introTitle',    NAME + ', a gift is waiting for you!'),
+  introSub:       take('introSub',      'To receive the gift, start a short breath verification'),
+  introBtn:       take('introBtn',      'Verify your identity'),
+
+  countTitle:     take('countTitle',    'When the countdown ends, blow toward the microphone for 3 seconds'),
+  countSub:       take('countSub',      'Ready? It\'s quick and easy'),
+
+  blowTitle:      take('blowTitle',     'Blow now for 3 seconds!'),
+  blowChip:       take('blowChip',      'Blow now • 3s'),
+
+  errTitle:       take('errTitle',      'No airflow detected ⚠️'),
+  errText:        take('errText',       'Blow harder'),
+  errBtn:         take('errBtn',        'Try again'),
+
+  okToastTitle:   take('okToastTitle',  'Perfect blow 🤣'),
+  okToastText:    take('okToastText',   'You\'re intoxicating… with laughter'),
+  okToastBtn:     take('okToastBtn',    'take me to my gift'),
+
+  okTitle:        take('okTitle',       'You earned it 🤣'),
+  okSub:          take('okSub',         'You are officially verified.'),
+  okBtn:          take('okBtn',         'Get your real gift')
+};
+
+  // --- הזרקת CSS ייעודי (scoped, ללא שבירה) ---
+  if(!document.getElementById('bv-css')){
+    var css = document.createElement('style');
+    css.id = 'bv-css';
+    css.textContent = [
+      /* בסיס אחיד בהתאם לקו העיצובי */
+      '.wrap-breath{display:grid;gap:32px;justify-items:center;text-align:center;margin-top:clamp(32px,8vh,64px);padding-bottom:24px;direction:ltr}',
+      '.bv-title{margin:0;font-size:28px;line-height:1.3;font-weight:800;letter-spacing:-.02em}',
+      '.bv-sub{margin:0;font-size:16px;line-height:1.5;color:#9aa3b2;opacity:.85}',
+      '.bv-cta,.btn.bv{width:min(300px,100%);min-height:52px;padding:16px 20px;font-size:16px;border-radius:12px;font-weight:700;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(0,0,0,.2)}',
+      '.bv-cta:hover,.btn.bv:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}',
+      '.bv-cta:active,.btn.bv:active{transform:translateY(0)}',
+      '.brand{background:#282D3F;color:#fff;border:1px solid rgba(255,255,255,.1)}',
+      '.green{background:#10b981;color:#fff}',
+      '.blue{background:#3b82f6;color:#fff}',
+      '.red{background:#ef4444;color:#fff}',
+
+      /* אייקונים בהתאם ל-Guidelines */
+      '.bv-gift-icon{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,rgba(96,165,250,.12),rgba(167,139,250,.12));border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:28px;line-height:1;box-shadow:0 8px 24px rgba(0,0,0,.15);animation:bvFloat 3s ease-in-out infinite}',
+      '@keyframes bvFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
+      '.bv-success-icon{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(52,211,153,.15));border:1px solid rgba(16,185,129,.2);display:flex;align-items:center;justify-content:center;font-size:32px;line-height:1;box-shadow:0 8px 32px rgba(16,185,129,.2);animation:bvPop .5s cubic-bezier(0.68,-0.55,0.265,1.55)}',
+      '@keyframes bvPop{0%{transform:scale(0) rotate(-45deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}',
+
+      /* מד בר (נשאר מהגרסה הקודמת) */
+      '.bv-zone{display:grid;gap:12px;justify-items:center}',
+      '.bv-meter{height:10px;width:min(320px,100%);border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);position:relative}',
+      '.bv-meter>i{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#60a5fa,#a78bfa);transition:width .06s linear}',
+
+      /* --- חדש: Hero נשיפה מודרני (בהשראת SHAKE) --- */
+      '.bv-hero{display:grid;gap:14px;justify-items:center}',
+      '.bv-glass{position:relative;width:min(240px,72vw);border-radius:20px;padding:16px;background:linear-gradient(180deg,#1b1f34,#111528);',
+      ' box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 20px 40px rgba(0,0,0,.35);',
+      ' border:1px solid rgba(255,255,255,.08);}',
+      '.bv-ring{position:relative;display:grid;place-items:center}',
+      '.bv-ring svg{width:180px;height:180px;filter:drop-shadow(0 6px 22px rgba(0,0,0,.35))}',
+      '.bv-ring circle{fill:none;stroke-linecap:round}',
+      '.bv-ring .bg{stroke:rgba(255,255,255,.10);stroke-width:10}',
+      '.bv-ring .fg{stroke:url(#bv-grad);stroke-width:12;transform:rotate(-90deg);transform-origin:50% 50%;',
+      ' stroke-dasharray:339 339;stroke-dashoffset:339;transition:stroke-dashoffset .08s linear}',
+      '.bv-emoji{position:absolute;inset:0;display:grid;place-items:center;font-size:58px;user-select:none;-webkit-user-drag:none;will-change:transform}',
+
+      /* “שבילי רוח” — נדלקים רק כשיש נשיפה */
+      '.bv-gust{position:absolute;right:-12px;top:50%;width:120px;height:54px;transform:translateY(-50%);opacity:0;pointer-events:none}',
+      '.bv-gust.on{opacity:1}',
+      '.bv-gust span{position:absolute;right:0;width:0;height:2px;border-radius:999px;',
+      ' background:linear-gradient(90deg,rgba(255,255,255,0),rgba(96,165,250,.85));',
+      ' box-shadow:0 0 16px rgba(96,165,250,.45);animation:bvWind 1s linear infinite}',
+      '.bv-gust span:nth-child(1){top:8px;animation-duration:.9s}',
+      '.bv-gust span:nth-child(2){top:26px;animation-duration:1.05s}',
+      '.bv-gust span:nth-child(3){top:42px;animation-duration:1.2s}',
+      '@keyframes bvWind{0%{width:0;opacity:0}15%{opacity:1}100%{width:120px;opacity:0;transform:translateX(6px)}}',
+
+      /* צ’יפ הדרכה קטן בסגנון SHAKE */
+      '.bv-chip{font-size:12px;color:#e8ecf4;font-weight:800;background:rgba(255,255,255,.08);',
+      ' border:1px solid rgba(255,255,255,.12);padding:6px 10px;border-radius:999px;',
+      ' box-shadow:0 6px 18px rgba(0,0,0,.25);letter-spacing:.2px}',
+
+      /* טוסטים וקונפטי — כמו קודם (לא נוגעים) */
+      '.toast{position:fixed;inset:0;display:none;place-items:center;background:rgba(10,12,22,.6);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);z-index:1000;padding:24px;text-align:center}',
+      '.toast.show{display:grid}',
+      '.toast .box{background:#1a1f35;border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.35);max-width:320px}',
+      '.toast h3{margin:0 0 6px 0}',
+      '.confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:999;display:block}',
+      '@keyframes infShake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}',
+      '.shake{animation:infShake .35s linear 1}',
+
+      /* נגישות: פחות תנועה למעדיפים */
+      '@media (prefers-reduced-motion:reduce){.bv-gust span,.bv-ring .fg{transition:none;animation:none}}'
+    ].join('');
+    document.head.appendChild(css);
+  }
+
+  // שימוש ב-SFX מהסקלטון
+  function play(kind){ try{ sfx(kind); }catch(e){} }
+
+  // קונפטי (אותו מנוע כמו בשאר הפיצ'רים)
+  function confettiBurst(canvas){
+    if(!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var r = window.devicePixelRatio || 1;
+    function size(){ canvas.width = canvas.clientWidth*r; canvas.height = canvas.clientHeight*r; ctx.setTransform(r,0,0,r,0,0); }
+    if(!canvas.__sized){ canvas.__sized = true; size(); addEventListener('resize', size); }
+    var colors=['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'], pieces=[], w=canvas.clientWidth, h=canvas.clientHeight;
+    for(var i=0;i<120;i++){ pieces.push({x:w/2,y:h/2,vx:(Math.random()*4-2),vy:(Math.random()*-3-2),r:Math.random()*6+3,c:colors[(Math.random()*colors.length)|0],a:1,spin:Math.random()*6.28,vr:(Math.random()*0.2-0.1)}); }
+    var g=0.05,t=0;
+    (function step(){
+      ctx.clearRect(0,0,w,h);
+      for(var i=0;i<pieces.length;i++){ var p=pieces[i]; p.vy+=g; p.x+=p.vx; p.y+=p.vy; p.spin+=p.vr; p.a-=0.008;
+        ctx.globalAlpha=Math.max(p.a,0); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin); ctx.fillStyle=p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r); ctx.restore();
+      }
+      ctx.globalAlpha=1; if(t++<260) requestAnimationFrame(step); else ctx.clearRect(0,0,w,h);
+    })();
+  }
+
+  // DOM יעד
+  var app = document.getElementById('app');
+  app.classList.remove('card');
+
+  // --- מסכים ---
+  function screenIntro(){
+    app.innerHTML =
+      '<div class="wrap wrap-breath' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '') + '">'+
+        '<div class="bv-gift-icon" aria-hidden="true">🎁</div>'+
+'<h1 class="bv-title">'+copy.introTitle+'</h1>'+
+'<p class="bv-sub">'+copy.introSub+'</p>'+
+'<button id="bv-start" class="btn bv brand">'+copy.introBtn+'</button>'+
+        '<div class="bv-sub" style="font-size:12px">no data collected</div>'+
+      '</div>';
+    document.getElementById('bv-start').addEventListener('click', function(){ play('confirm'); screenCount(1); });
+  }
+
+  function screenCount(attempt){
+    app.innerHTML =
+      '<div class="wrap wrap-breath' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '') + '">'+
+        '<h1 class="bv-title">'+copy.countTitle+'</h1>'+
+        '<div class="bv-sub">'+copy.countSub+'</div>'+      
+        '<div id="bv-count" class="bv-title" style="font-size:64px;font-weight:900;line-height:1">3</div>'+
+      '</div>';
+    var n = 3, el = document.getElementById('bv-count');
+    var t = setInterval(function(){
+      n -= 1;
+      if(n<=0){ clearInterval(t); screenBlow(attempt); }
+      else { el.textContent = String(n); }
+    }, 1000);
+  }
+
+  function screenBlow(attempt){
+    app.innerHTML =
+      '<div class="wrap wrap-breath' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '') + '">'+
+        '<h1 id="bv-title" class="bv-title">'+copy.blowTitle+'</h1>'+
+
+        /* --- HERO חדש: טבעת נשיפה + שבילי רוח + צ’יפ --- */
+        '<div class="bv-hero" aria-hidden="true">'+
+          '<div class="bv-glass">'+
+            '<div class="bv-ring">'+
+              '<svg viewBox="0 0 120 120" preserveAspectRatio="xMidYMid meet" aria-hidden="true">'+
+                '<defs>'+
+                  '<linearGradient id="bv-grad" x1="0%" y1="0%" x2="100%" y2="0%">'+
+                    '<stop offset="0%" stop-color="#60a5fa"></stop>'+
+                    '<stop offset="100%" stop-color="#a78bfa"></stop>'+
+                  '</linearGradient>'+
+                '</defs>'+
+                '<circle class="bg" cx="60" cy="60" r="54"></circle>'+
+                '<circle class="fg" id="bv-circ" cx="60" cy="60" r="54"></circle>'+
+              '</svg>'+
+              '<div class="bv-emoji" id="bv-emoji">🌬️</div>'+
+            '</div>'+
+            '<div class="bv-gust" id="bv-gust"><span></span><span></span><span></span></div>'+
+          '</div>'+
+          '<div class="bv-chip">'+copy.blowChip+'</div>'+
+        '</div>'+
+
+        /* --- המד/זמן הישנים נשמרים (לא נוגעים בפונקציונליות) --- */
+        '<div class="bv-zone">'+
+          '<div class="bv-meter" aria-hidden="true"><i id="bv-bar"></i></div>'+
+          '<div class="bv-sub" id="bv-time">00:00</div>'+
+          '<div id="bv-err" class="bv-sub" style="min-height:18px;color:#fca5a5"></div>'+
+        '</div>'+
+        (PREV?'<div class="bv-sub">Preview mode</div>':'')+
+        '<canvas id="bv-confetti" class="confetti-canvas"></canvas>'+
+      '</div>'+
+      '<div id="bv-toast-err" class="toast"><div class="box"><h3>'+copy.errTitle+'</h3><p>'+copy.errText+'</p><div style="height:10px"></div><button id="bv-try" class="btn bv green">'+copy.errBtn+'</button></div></div>'+
+      '<div id="bv-toast-ok" class="toast"><div class="box"><h3>'+copy.okToastTitle+'</h3><p>'+copy.okToastText+'</p><div style="height:10px"></div><button id="bv-go" class="btn bv green">'+copy.okToastBtn+'</button></div></div>';
+
+    // הזזת טוסטים ל-body כדי שלא יושפעו מ-transform
+    (function moveToBody(id){ var x=document.getElementById(id); if(x && !x.__moved){ document.body.appendChild(x); x.__moved=true; } })('bv-toast-err');
+    (function moveToBody(id){ var x=document.getElementById(id); if(x && !x.__moved){ document.body.appendChild(x); x.__moved=true; } })('bv-toast-ok');
+
+    var bar   = document.getElementById('bv-bar');
+    var timeEl= document.getElementById('bv-time');
+    var circ  = document.getElementById('bv-circ');
+    var gust  = document.getElementById('bv-gust');
+    var emoji = document.getElementById('bv-emoji');
+
+    var t0 = performance.now(), raf = 0, stopTimer = 0;
+    var stream=null, ctx=null, analyser=null, data=null;
+
+    // הגדרות טבעת (רדיוס 54 → היקף ~339)
+    var C = 339; // קבוע תואם ל-stroke-dasharray
+
+    function fmt(ms){ var s=Math.max(0,Math.floor(ms/1000)); return '00:'+String(s%60).padStart(2,'0'); }
+
+    function level(){
+      if(analyser && data){
+        analyser.getByteTimeDomainData(data);
+        var sum=0; for(var i=0;i<data.length;i++){ var v=(data[i]-128)/128; sum+=v*v; }
+        var rms=Math.sqrt(sum/data.length);
+        return Math.min(100, Math.floor(rms*260));
+      }
+      return Math.min(100, (Math.random()*60+10)|0);
+    }
+
+    function loop(){
+      var w = (attempt===2) ? 100 : level();     // ניסיון שני: כמו במפרט — קפיצה ל‑100%
+      bar.style.width = w + '%';
+      timeEl.textContent = fmt(performance.now()-t0);
+
+      // עדכוני ה-HERO (ויזואלי בלבד)
+      try{
+        // טבעת
+        var off = C - (C*w/100);
+        circ.style.strokeDashoffset = off;
+
+        // “שבילי רוח” נדלקים בסף נשיפה
+        if (w >= 55){ gust.classList.add('on'); } else { gust.classList.remove('on'); }
+
+        // אימוג’י נשיפה — scale עדין
+        var s = 1 + (w*0.0035);
+        emoji.style.transform = 'scale('+s+')';
+      }catch(_){}
+
+      raf = requestAnimationFrame(loop);
+    }
+
+    function cleanup(){
+      try{ if(stream && stream.getTracks){ stream.getTracks().forEach(function(tr){tr.stop();}); } }catch(e){}
+      try{ if(ctx && ctx.close){ ctx.close(); } }catch(e){}
+      stream=null; ctx=null; analyser=null; data=null;
+      try{ cancelAnimationFrame(raf); }catch(e){}
+      try{ clearTimeout(stopTimer); }catch(e){}
+    }
+
+    // נסיון הרשאת מיקרופון ל‑VU אמיתי (ללא הקלטה/שמירה)
+    try{
+      if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+        navigator.mediaDevices.getUserMedia({audio:true}).then(function(s){
+          stream = s;
+          ctx = new (window.AudioContext||window.webkitAudioContext)();
+          var src = ctx.createMediaStreamSource(stream);
+          analyser = ctx.createAnalyser(); analyser.fftSize = 1024;
+          data = new Uint8Array(analyser.frequencyBinCount);
+          src.connect(analyser);
+        }).catch(function(){ /* נשאר עם fallback */ });
+      }
+    }catch(_){}
+
+    play('confirm');
+    loop();
+
+    // סיום לוגי: אין שינוי לפלואו (ניסיון 1 → שגיאה; ניסיון 2 → הצלחה)
+    stopTimer = setTimeout(function(){
+      cleanup();
+      if(attempt===1){
+        document.querySelector('.wrap-breath') && document.querySelector('.wrap-breath').classList.add('shake');
+        setTimeout(function(){ try{ document.querySelector('.wrap-breath').classList.remove('shake'); }catch(_){ } }, 380);
+        play('error');
+        document.getElementById('bv-toast-err').classList.add('show');
+        document.getElementById('bv-try').addEventListener('click', function(){
+          document.getElementById('bv-toast-err').classList.remove('show');
+          screenCount(2);
+        }, { once:true });
+      } else {
+        play('tada');
+        document.getElementById('bv-toast-ok').classList.add('show');
+        document.getElementById('bv-go').addEventListener('click', function(){
+          document.getElementById('bv-toast-ok').classList.remove('show');
+          screenSuccess();
+        }, { once:true });
+      }
+    }, attempt===1 ? 4000 : 3000);
+  }
+
+  function screenSuccess(){
+    app.innerHTML =
+      '<div class="wrap wrap-breath' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '') + '">'+
+        '<div class="bv-success-icon" aria-hidden="true">💝</div>'+
+'<h1 class="bv-title">'+copy.okTitle+'</h1>'+
+'<p class="bv-sub">'+copy.okSub+'</p>'+
+'<button id="bv-open" class="btn bv green"'+(PREV?' disabled':'')+'>'+copy.okBtn+'</button>'+
+        (PREV?'<div class="bv-sub">Preview only – button disabled</div>':'')+
+        '<canvas id="bv-confetti" class="confetti-canvas"></canvas>'+
+      '</div>';
+    confettiBurst(document.getElementById('bv-confetti'));
+    var b = document.getElementById('bv-open');
+    b && b.addEventListener('click', function(){
+      if(PREV) return;
+      play('confirm');
+      try{ window.open(GIFT,'_blank','noopener'); }catch(e){}
+    });
+  }
+
+  // GO
+  screenIntro();
+}
+
+/* Finger-ID (Fake Fingerprint) */
+function finger(){
+  // --- Params (Runtime contract)
+  var qs   = new URLSearchParams(location.search);
+  var PREV = (qs.get('preview')||'0').trim()==='1';
+  var NAME = (qs.get('name')||'Friend').trim();
+  var GIFT = (qs.get('giftUrl')||'#').trim();
+  var THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
+var validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
+var activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
+if (activeTheme !== 'dark') { document.body.className = 'theme-' + activeTheme; } 
+else { document.body.className = ''; }
+
+  // --- One-time CSS injection (scoped)
+  if (!document.getElementById('finger-ux')) {
+    var st = document.createElement('style');
+    st.id = 'finger-ux';
+    st.textContent = [
+      ".wrap-finger{display:grid;gap:32px;justify-items:center;text-align:center;margin-top:clamp(32px,8vh,64px);padding-bottom:24px}",
+      /* gift icon */
+      ".fng-gift-icon{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,rgba(96,165,250,.12),rgba(167,139,250,.12));border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:28px;line-height:1;box-shadow:0 8px 24px rgba(0,0,0,.15);animation:fngFloat 3s ease-in-out infinite}",
+      "@keyframes fngFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}",
+      /* success icon */
+      ".fng-success-icon{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(52,211,153,.15));border:1px solid rgba(16,185,129,.2);display:flex;align-items:center;justify-content:center;font-size:32px;line-height:1;box-shadow:0 8px 32px rgba(16,185,129,.2);animation:fngPop .5s cubic-bezier(0.68,-0.55,0.265,1.55)}",
+      "@keyframes fngPop{0%{transform:scale(0) rotate(-45deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}",
+      /* typography */
+      ".fng-title{margin:0;font-size:28px;line-height:1.3;font-weight:800;letter-spacing:-.02em}",
+      ".fng-sub{margin:0;font-size:16px;color:#9aa3b2;line-height:1.5;opacity:.85}",
+      ".fng-hint{font-size:12px;color:#9aa3b2}",
+      /* buttons (brand/green per design system) */
+      ".btn{width:min(300px,100%);min-height:52px;padding:16px 20px;font-size:16px;border-radius:12px;font-weight:700;margin:0 auto;transition:transform .15s ease,box-shadow .15s ease;box-shadow:0 4px 16px rgba(0,0,0,.2);border:0;cursor:pointer}",
+      ".btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}",
+      ".btn:active{transform:translateY(0)}",
+      ".brand{background:#282D3F;color:#fff;border:1px solid rgba(255,255,255,.1)}",
+      ".green{background:#10b981;color:#fff}",
+      ".ghost{background:#0b1020;color:#9aa3b2;border:1px solid rgba(255,255,255,.12)}",
+      /* sensor (progress ring) */
+      ".fng-sensor{--p:0;--col:#a78bfa;width:190px;height:190px;border-radius:50%;display:grid;place-items:center;position:relative;user-select:none;touch-action:manipulation;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 18px 42px rgba(0,0,0,.35);",
+      "background: radial-gradient(farthest-side,#0f152a 69%,transparent 70% 100%),",
+      "conic-gradient(var(--col) calc(var(--p)*1%), rgba(255,255,255,.08) 0);}",
+      ".fng-core{width:128px;height:128px;border-radius:50%;display:grid;place-items:center;background:#0f152a;border:1px solid rgba(255,255,255,.08)}",
+      ".fng-core svg{width:74px;height:74px;opacity:.9;stroke:#aeb7c8}",
+      /* small pulse while scanning */
+      ".fng-core.scanning{box-shadow:0 0 0 0 rgba(96,165,250,.25);animation:fngPulse 1.2s ease-in-out infinite}",
+      "@keyframes fngPulse{to{box-shadow:0 0 0 16px rgba(96,165,250,.0)}}",
+      /* toasts (iOS-safe: no heavy blur) */
+      ".fng-toast{position:fixed;inset:0;display:none;place-items:center;background:rgba(10,12,22,.60);z-index:1000;padding:24px;text-align:center}",
+      ".fng-toast.show{display:grid}",
+      ".fng-toast .box{background:#1a1f35;border-radius:16px;padding:20px;max-width:320px;box-shadow:0 10px 30px rgba(0,0,0,.35)}",
+      ".fng-toast h3{margin:0 0 6px 0}",
+      /* shake (reuse runtime's keyframes name) */
+      "@keyframes infShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-6px)}40%,60%{transform:translateX(6px)}}",
+      ".shake{animation:infShake .35s linear 1}",
+      /* confetti canvas */
+      ".confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:999;display:block}"
+    ].join('');
+    (document.head||document.documentElement).appendChild(st);
+  }
+
+  // --- Confetti
+  function confettiBurst(canvas){
+    if(!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var r = window.devicePixelRatio || 1;
+    function size(){ canvas.width = canvas.clientWidth*r; canvas.height = canvas.clientHeight*r; ctx.setTransform(r,0,0,r,0,0); }
+    if(!canvas.__sized){ canvas.__sized = true; size(); window.addEventListener('resize', size); }
+    var colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
+    var pieces = [], w = canvas.clientWidth, h = canvas.clientHeight;
+    for(var i=0;i<120;i++){
+      pieces.push({ x:w/2, y:h/2, vx:(Math.random()*4-2), vy:(Math.random()*-3-2),
+        r:Math.random()*6+3, c:colors[(Math.random()*colors.length)|0], a:1, spin:(Math.random()*6.28), vr:(Math.random()*0.2-0.1) });
+    }
+    var g=0.05, t=0;
+    (function step(){
+      ctx.clearRect(0,0,w,h);
+      for(var j=0;j<pieces.length;j++){
+        var p = pieces[j];
+        p.vy += g; p.x += p.vx; p.y += p.vy; p.spin += p.vr; p.a -= 0.008;
+        ctx.globalAlpha = Math.max(p.a,0);
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r);
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+      if(t++<260) requestAnimationFrame(step); else ctx.clearRect(0,0,w,h);
+    })();
+  }
+
+  // --- Helpers
+  function render(html){ var app = document.getElementById('app'); app.innerHTML = html; app.classList.remove('card'); }
+  function setRing(el, pct){
+    el.style.setProperty('--p', String(pct));
+    var col = (pct<34)?'#a78bfa':(pct<67)?'#60a5fa':'#2dd4bf';
+    el.style.setProperty('--col', col);
+  }
+
+  // --- Copy (defaults in Hebrew; allow URL overrides)
+  function take(k, def){ var v = qs.get(k); if(!v || !v.trim()){ return def; } return v.trim().slice(0,80); }
+  var copy = {
+    introTitle: take('introTitle', NAME + ', you got a sweet surprise! 💖'),
+    introSub:   take('introSub',   'Unlock your gift via fingerprint scan verification'),
+    introBtn:   take('introBtn',   'Verify your identity'),
+
+    scanTitle:  take('scanTitle',  'To verify, place your finger on the sensor.'),
+    scanSub:    take('scanSub',    'Hold steadily until the ring fills up for accurate identification.'),
+
+    err1Title:  take('err1Title',  'Finger moved ⚠️'),
+    err1Text:   take('err1Text',   'Keep it steady until completion'),
+    err2Title:  take('err2Title',  'Finger too wet ⚠️'),
+    err2Text:   take('err2Text',   'Wipe your finger and try again'),
+    errBtn:     take('errBtn',     'Try again'),
+
+    okTitle:    take('okTitle',    'You’ve earned it 😂'),
+    okSub:      take('okSub',      'You are officially verified!'),
+    okBtn:      take('okBtn',      'To the real gift')
+  };
+
+  // --- Flow
+  var attempt = 0; // 1=>90% stop, 2=>95% stop, 3=>100% success
+
+  function screenIntro(){
+    render(
+  '<div class="wrap wrap-finger' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '') + '">'+
+        '<div class="fng-gift-icon" aria-hidden="true">🎁</div>'+
+        '<h1 class="fng-title">'+copy.introTitle+'</h1>'+
+        '<p class="fng-sub">'+copy.introSub+'</p>'+
+        '<button id="fng-start" class="btn brand">'+copy.introBtn+'</button>'+
+        '<div class="fng-hint">no data collected</div>'+
+      '</div>'
+    );
+    var start = document.getElementById('fng-start');
+    start.addEventListener('click', function(){ try{ sfx('confirm'); }catch(_){ } screenScan(); });
+  }
+
+  function screenScan(){
+    render(
+  '<div class="wrap wrap-finger' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '') + '">'+
+        '<h1 class="fng-title">'+copy.scanTitle+'</h1>'+
+        '<p class="fng-sub">'+copy.scanSub+'</p>'+
+        '<div id="fng-sensor" class="fng-sensor" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">'+
+          '<div id="fng-core" class="fng-core" aria-hidden="true">'+
+            /* simple fingerprint svg (stylized) */
+            '<svg viewBox="0 0 64 64" fill="none" stroke-width="2">'+
+              '<path d="M20 28a12 12 0 0 1 24 0" />'+
+              '<path d="M16 28c0-8.8 7.2-16 16-16s16 7.2 16 16" />'+
+              '<path d="M24 36c1 6 0 10-4 16" />'+
+              '<path d="M40 32c2 8 1 14-3 22" />'+
+              '<path d="M28 28c1 10-1 16-6 24" />'+
+              '<path d="M32 28c2 12 0 20-6 30" />'+
+            '</svg>'+
+          '</div>'+
+        '</div>'+
+        (PREV?'<div class="fng-hint">Preview mode</div>':'')+
+        '<canvas id="fng-confetti" class="confetti-canvas"></canvas>'+
+      '</div>'+
+      /* toast #1 */
+      '<div id="fng-toast1" class="fng-toast"><div class="box"><h3>'+copy.err1Title+'</h3><p>'+copy.err1Text+'</p><div style="height:10px"></div><button id="fng-try1" class="btn brand">'+copy.errBtn+'</button></div></div>'+
+      /* toast #2 */
+      '<div id="fng-toast2" class="fng-toast"><div class="box"><h3>'+copy.err2Title+'</h3><p>'+copy.err2Text+'</p><div style="height:10px"></div><button id="fng-try2" class="btn brand">'+copy.errBtn+'</button></div></div>'
+    );
+
+    // move toasts to <body> (avoid transform ancestry issues)
+    var t1 = document.getElementById('fng-toast1'), t2 = document.getElementById('fng-toast2');
+    if (t1 && !t1.__moved){ document.body.appendChild(t1); t1.__moved = true; }
+    if (t2 && !t2.__moved){ document.body.appendChild(t2); t2.__moved = true; }
+
+    var sensor = document.getElementById('fng-sensor');
+    var core   = document.getElementById('fng-core');
+    var pct    = 0;
+    var raf    = 0;
+    var running = false;
+    // === Finger: calibrated 3s timeline ===
+var startTs = 0;
+var target  = 0;
+var DURATION = 3000; // 3,000ms per attempt
+
+    function colorize(){ setRing(sensor, pct); sensor.setAttribute('aria-valuenow', String(pct)); }
+
+    function step(ts){
+  if (!startTs) startTs = ts || performance.now();
+  var elapsed = (ts || performance.now()) - startTs;
+  // התקדמות ליניארית בזמן, עד היעד של הניסיון הנוכחי
+  pct = Math.min(target, Math.round((elapsed / DURATION) * target));
+  colorize();
+
+  if (pct >= target){
+    running = false;
+    core.classList.remove('scanning');
+
+    if (attempt === 0){ // first attempt → 90%
+      try{ sfx('error'); }catch(_){}
+      document.querySelector('.wrap-finger').classList.add('shake');
+      setTimeout(function(){ var el=document.querySelector('.wrap-finger'); if(el){ el.classList.remove('shake'); } }, 380);
+      t1.classList.add('show');
+      return;
+    }
+    if (attempt === 1){ // second attempt → 95%
+      try{ sfx('error'); }catch(_){}
+      document.querySelector('.wrap-finger').classList.add('shake');
+      setTimeout(function(){ var el=document.querySelector('.wrap-finger'); if(el){ el.classList.remove('shake'); } }, 380);
+      t2.classList.add('show');
+      return;
+    }
+    // third attempt → 100% success
+    try{ sfx('tada'); }catch(_){}
+    screenSuccess();
+    return;
+  }
+
+  raf = requestAnimationFrame(step);
+}
+
+function startScan(){
+  if (running) return;
+  running = true;
+
+  // יעד לפי ניסיון: 90% → 95% → 100%
+  target = (attempt === 0) ? 90 : (attempt === 1 ? 95 : 100);
+
+  // אתחול טיימליין
+  startTs = 0;
+  core.classList.add('scanning');
+  try{ sfx('confirm'); }catch(_){}
+
+  // בטיחות: לבטל לופ קודם אם היה
+  if (raf) { try{ cancelAnimationFrame(raf); }catch(_){} raf = 0; }
+
+  raf = requestAnimationFrame(step);
+}
+
+    // “Place your finger” → hold to start; also allow tap
+    sensor.addEventListener('pointerdown', function(){ startScan(); });
+    sensor.addEventListener('click', function(){ if(!running) startScan(); });
+
+document.getElementById('fng-try1').addEventListener('click', function(){
+  t1.classList.remove('show'); attempt = 1; pct = 0; colorize();
+});
+document.getElementById('fng-try2').addEventListener('click', function(){
+  t2.classList.remove('show'); attempt = 2; pct = 0; colorize();
+});
+    // init ring
+    setRing(sensor, 0);
+  }
+
+  function screenSuccess(){
+    render(
+  '<div class="wrap wrap-finger' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '') + '">'+
+        '<div class="fng-success-icon" aria-hidden="true">💝</div>'+
+        '<h1 class="fng-title">'+copy.okTitle+'</h1>'+
+        '<p class="fng-sub">'+copy.okSub+'</p>'+
+        '<button id="fng-open" class="btn green"'+(PREV?' disabled':'')+'>'+copy.okBtn+'</button>'+
+        (PREV?'<div class="fng-hint">Preview only – button disabled</div>':'')+
+        '<canvas id="fng-confetti" class="confetti-canvas"></canvas>'+
+      '</div>'
+    );
+    confettiBurst(document.getElementById('fng-confetti'));
+    var btn = document.getElementById('fng-open');
+    btn.addEventListener('click', function(){
+      if (PREV) return;
+      try{ sfx('confirm'); }catch(_){}
+      try{ window.open(GIFT, '_blank', 'noopener'); }catch(_){}
+    });
+  }
+
+  // GO
+  screenIntro();
 }
 
 const map = {
+'Finger': finger,
+'breath-verify': breathVerify,
 'voice-verify': voiceVerify,
 'captcha': captcha,
 'infinite': infinite,
 'narcissist-q': narcissistQ,
-'selfie-verify': selfieVerify
+'shake': shake
 };
 
-(map[F] || (()=>el('<h1 class="h1">Feature not found</h1><p class="p">Use ?f=voice-verify|captcha|infinite|narcissist-q|selfie-verify</p>')))();
+(map[F] || (()=>el('<h1 class="h1">Feature not found</h1><p class="p">Use ?f=voice-verify|captcha|infinite|narcissist-q|shake|breath-verify|Finger</p>')))();
 })();
 </script>

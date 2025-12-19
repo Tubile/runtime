@@ -1213,9 +1213,18 @@ body.theme-neon .phone {
 <script>
 (function(){
 const qs = new URLSearchParams(location.search);
+// --- Start of URL Fixer ---
+  function normalizeUrl(url, fallback) {
+    var c = (url || '').trim();
+    if (!c && fallback) c = fallback; 
+    if (!c || c === '#') return '#';
+    if (!/^https?:\/\//i.test(c)) return 'https://' + c;
+    return c;
+  }
+  // --- End of URL Fixer ---
 const F = (qs.get('f')||'').trim(); // feature slug
 const NAME = (qs.get('name')||'Friend').trim();
-const GIFT = (qs.get('giftUrl')||'#').trim();
+const GIFT = normalizeUrl(qs.get('giftUrl'));
 const PREV = (qs.get('preview')||'0').trim()==='1';
 function getCopy(key, fallback) {
   const v = qs.get(key);
@@ -1460,7 +1469,7 @@ function voiceVerify(){
   const qs   = new URLSearchParams(location.search);
   const PREV = (qs.get('preview')||'0').trim()==='1';
   const NAME = (qs.get('name')||'Friend').trim();
-  const GIFT = (qs.get('giftUrl')||'#').trim();
+  const GIFT = normalizeUrl(qs.get('giftUrl'));
   const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
 const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
 const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
@@ -1953,7 +1962,7 @@ function infinite(){
 
   // Read params
   const NAME = getCopy('name', 'Friend');
-  const GIFT = qs.get('giftUrl') || 'https://example.com';
+  const GIFT = normalizeUrl(qs.get('giftUrl'), 'https://example.com');
   const ACCENT = (qs.get('accent') || 'dark').toLowerCase();
 // ✅ קריאת theme מה-URL
 const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
@@ -2419,7 +2428,7 @@ function shake(){
   const qs   = new URLSearchParams(location.search);
   const PREV = (qs.get('preview')||'0').trim()==='1';
   const NAME = (qs.get('name')||'Friend').trim();
-  const GIFT = (qs.get('giftUrl')||'#').trim();
+  const GIFT = normalizeUrl(qs.get('giftUrl'));
   const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
 const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
 const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
@@ -2740,7 +2749,7 @@ function breathVerify(){
   var qs   = new URLSearchParams(location.search);
   var PREV = (qs.get('preview')||'0').trim()==='1';
   var NAME = (qs.get('name')||'Friend').trim();
-  var GIFT = (qs.get('giftUrl')||'#').trim();
+  var GIFT = normalizeUrl(qs.get('giftUrl'));
   var THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
 var validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
 var activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
@@ -3064,7 +3073,7 @@ function finger(){
   var qs   = new URLSearchParams(location.search);
   var PREV = (qs.get('preview')||'0').trim()==='1';
   var NAME = (qs.get('name')||'Friend').trim();
-  var GIFT = (qs.get('giftUrl')||'#').trim();
+  var GIFT = normalizeUrl(qs.get('giftUrl'));
   var THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
 var validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
 var activeTheme = validThemes.includes(THEME) ? THEME : 'dark';

@@ -1755,7 +1755,7 @@ function captcha(){
   const qs    = new URLSearchParams(location.search);
   const PREV  = (qs.get('preview')||'0').trim()==='1';
   const NAME  = (qs.get('name')||'Friend').trim();
-  const GIFT  = (qs.get('giftUrl')||'#').trim();
+  const GIFT = normalizeUrl(qs.get('giftUrl'));
   const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
 const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
 const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
@@ -2176,7 +2176,7 @@ function narcissistQ(){
   const qs    = new URLSearchParams(location.search);
   const PREV  = (qs.get('preview')||'0').trim()==='1';
   const NAME  = (qs.get('name')||'Friend').trim().slice(0,24);
-  const GIFT  = (qs.get('giftUrl')||'#').trim();
+  const GIFT = normalizeUrl(qs.get('giftUrl'));
   const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
 const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
 const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';

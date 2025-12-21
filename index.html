@@ -1755,12 +1755,14 @@ function captcha(){
   const qs    = new URLSearchParams(location.search);
   const PREV  = (qs.get('preview')||'0').trim()==='1';
   const NAME  = (qs.get('name')||'Friend').trim();
-  const GIFT = normalizeUrl(qs.get('giftUrl'));
+  const GIFT = qs.get('giftUrl'); // יטופל בפתיחה
+  
+  // Theme
   const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
-const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
-const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
-if (activeTheme !== 'dark') { document.body.className = 'theme-' + activeTheme; } 
-else { document.body.className = ''; }
+  const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
+  const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
+  if (activeTheme !== 'dark') { document.body.className = 'theme-' + activeTheme; } 
+  else { document.body.className = ''; }
 
   const copy = {
     introTitle:  (qs.get('introTitle') || `${NAME}, you've got a sweet surprise! 💖`).slice(0,80),
@@ -1768,20 +1770,18 @@ else { document.body.className = ''; }
     introBtn:    (qs.get('introBtn')   || `Verify & get the gift`).slice(0,32),
     gridHeader:  (qs.get('gridHeader') || `To verify your identity, select all images with a lovely weirdo 👇`).slice(0,80),
     verify:      (qs.get('verifyText') || `Verify`).slice(0,32),
-    continueTxt: (qs.get('continueText') || `Success! get your gift`).slice(0,32),
+    continueTxt: (qs.get('continueText') || `Verifying...`).slice(0,32), // שינינו לטקסט טעינה
     okTitle:     (qs.get('okTitle')    || `You're verified! 🤣`).slice(0,80),
     okSub:       (qs.get('okSub')      || `Enjoy your gift!`).slice(0,80),
     okBtn:       (qs.get('okBtn')      || `Claim your gift`).slice(0,32),
   };
 
-  // שלושת היעדים הקבועים (0..8): ימני‑עליון, מרכז, תחתון‑מרכז
-  const targets = [2,4,7];  // לפי הבריף. :contentReference[oaicite:4]{index=4}
-
-  // העלאות מה‑URL (img1..img3)
+  // יעדים קבועים (תמונות ה"חבר")
+  const targets = [2,4,7]; 
   const IMG_URLS = [ qs.get('img1')||'', qs.get('img2')||'', qs.get('img3')||'' ];
   const anyProvided = IMG_URLS.some(Boolean);
 
-  // 6 תמונות קבועות (מוקטנות ל‑600×600 עבור ביצועים)
+  // תמונות מילוי (נוף/טבע)
   const FILLER_URLS = [
     "https://images.pexels.com/photos/1072179/pexels-photo-1072179.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&dpr=2",
     "https://images.pexels.com/photos/113338/pexels-photo-113338.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&dpr=2",
@@ -1791,40 +1791,25 @@ else { document.body.className = ''; }
     "https://images.pexels.com/photos/1547813/pexels-photo-1547813.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&dpr=2"
   ];
 
-  // Placeholder גדול, בולד, שתי שורות (קריא במובייל)
   function placeholderDataURL(){
-  const svg =
-    `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'>
-       <rect width='100%' height='100%' fill='white'/>
-       <g fill='#111' font-family='system-ui,Segoe UI,Roboto,Helvetica,Arial' font-weight='700'>
-         <text x='50%' y='35%' text-anchor='middle' font-size='72'>We'll put</text>
-         <text x='50%' y='50%' text-anchor='middle' font-size='72'>their photo</text>
-         <text x='50%' y='65%' text-anchor='middle' font-size='72'>here 🤣</text>
-       </g>
-     </svg>`;
-  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
-}
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='100%' height='100%' fill='white'/><g fill='#111' font-family='sans-serif' font-weight='700'><text x='50%' y='35%' text-anchor='middle' font-size='72'>We'll put</text><text x='50%' y='50%' text-anchor='middle' font-size='72'>their photo</text><text x='50%' y='65%' text-anchor='middle' font-size='72'>here 🤣</text></g></svg>`;
+    return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+  }
   const PLACEHOLDER = placeholderDataURL();
 
-  // מזער תמונות לרשת (Cloudinary/Pexels)
   function sizeForGrid(src){
     try{
       const u = new URL(src);
-      if (/res\.cloudinary\.com/.test(u.hostname)) {
-        return src.replace('/upload/', '/upload/f_auto,q_auto,w_600,h_600,c_fill/');
-      }
+      if (/res\.cloudinary\.com/.test(u.hostname)) return src.replace('/upload/', '/upload/f_auto,q_auto,w_600,h_600,c_fill/');
       if (/images\.pexels\.com/.test(u.hostname)) {
-        u.searchParams.set('auto','compress');
-        u.searchParams.set('cs','tinysrgb');
+        u.searchParams.set('auto','compress'); u.searchParams.set('cs','tinysrgb');
         u.searchParams.set('w','600'); u.searchParams.set('h','600');
-        u.searchParams.set('dpr', (window.devicePixelRatio||1) > 1 ? '2' : '1');
         return u.toString();
       }
       return src;
     }catch(e){ return src; }
   }
 
-  // ב‑PREVIEW: אם חסרה תמונה – placeholder; בלייב: משכפלים אם פחות מ‑3
   function getTargetSrc(slotIndex){
     if (IMG_URLS[slotIndex]) return IMG_URLS[slotIndex];
     if (PREV || !anyProvided) return PLACEHOLDER;
@@ -1833,13 +1818,14 @@ else { document.body.className = ''; }
   }
 
   const nonTargets = [0,1,3,5,6,8];
-
   const app = document.getElementById('app');
-  app.classList.remove('card'); // “מסך נקי” כמו infinite. :contentReference[oaicite:5]{index=5}
+  app.classList.remove('card');
+
+  function sfx(k){ try{ window.sfx(k); }catch(e){} }
 
   function screenIntro(){
     app.innerHTML = `
-  <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+      <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="cap-gift-icon" aria-hidden="true">🎁</div>
         <h1 class="cap-title">${copy.introTitle}</h1>
         <p class="cap-sub">${copy.introSub}</p>
@@ -1847,28 +1833,26 @@ else { document.body.className = ''; }
         <div class="cap-hint">no data will be collected</div>
       </div>
     `;
-    document.getElementById('start').addEventListener('click', ()=>{ try{sfx('confirm')}catch(e){}; screenGrid(); });
+    document.getElementById('start').addEventListener('click', ()=>{ sfx('confirm'); screenGrid(); });
   }
 
   function tileHtml(i){
     const ti = targets.indexOf(i);
-    if (ti !== -1){
-      const src = sizeForGrid(getTargetSrc(ti));
-      return `<div class="cap-tile" data-i="${i}"><img class="cap-img" src="${src}" alt="" decoding="async"></div>`;
-    }
-    const k = nonTargets.indexOf(i);
-    const src = sizeForGrid(FILLER_URLS[k] || PLACEHOLDER);
+    let src = PLACEHOLDER;
+    if (ti !== -1) src = sizeForGrid(getTargetSrc(ti));
+    else src = sizeForGrid(FILLER_URLS[nonTargets.indexOf(i)] || PLACEHOLDER);
+    
     return `<div class="cap-tile" data-i="${i}"><img class="cap-img" src="${src}" alt="" decoding="async"></div>`;
   }
 
   function screenGrid(){
     app.innerHTML = `
-  <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+      <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <h1 class="cap-title">${copy.gridHeader}</h1>
         <div id="grid" class="cap-grid">
           ${Array.from({length:9}).map((_,i)=>tileHtml(i)).join('')}
         </div>
-        <button id="verify" class="btn cap-cta brand">${copy.verify}</button>
+        <button id="verify" class="btn cap-cta brand" style="transition: all 0.2s">${copy.verify}</button>
         ${PREV ? `<div class="cap-hint">Preview mode</div>` : ``}
         <canvas id="cap-confetti" class="confetti-canvas"></canvas>
       </div>
@@ -1878,48 +1862,76 @@ else { document.body.className = ''; }
     const verifyBtn = document.getElementById('verify');
     const confettiCanvas = document.getElementById('cap-confetti');
 
-    // Tap מיידי במקום click
+    // בחירת תמונות + סאונד קליק
     grid.addEventListener('pointerdown', (e)=>{
       const tile = e.target.closest('.cap-tile');
       if(!tile) return;
+      // אם זה טאץ', למנוע זום/גלילה בטעות
+      // e.preventDefault(); 
       tile.classList.toggle('sel');
+      
+      // סאונד נעים בבחירה
+      if(tile.classList.contains('sel')) sfx('click'); 
     });
 
-    let solved = false;
-
     verifyBtn.addEventListener('click', ()=>{
-      if(solved){ screenSuccess(); return; }
       const selected = [...grid.querySelectorAll('.cap-tile.sel')].map(t=>+t.dataset.i).sort((a,b)=>a-b);
-      const ok = JSON.stringify(selected) === JSON.stringify([...targets].sort((a,b)=>a-b)); // בדיוק 3 היעדים. :contentReference[oaicite:6]{index=6}
+      const targetSorted = [...targets].sort((a,b)=>a-b);
+      const ok = JSON.stringify(selected) === JSON.stringify(targetSorted);
+
       if(!ok){
-        try{sfx('error')}catch(e){}
-        verifyBtn.classList.add('error'); grid.classList.add('shake');
+        // שגיאה
+        sfx('error');
+        verifyBtn.classList.add('error'); 
+        grid.classList.add('shake');
         setTimeout(()=>{ verifyBtn.classList.remove('error'); grid.classList.remove('shake'); }, 380);
         return;
       }
-      try{sfx('tada')}catch(e){}
-      confettiBurst(confettiCanvas);
-      verifyBtn.textContent = copy.continueTxt;
-      verifyBtn.classList.add('green');
-      solved = true;
+
+      // --- הצלחה: מנגנון חדש ללא לחיצה כפולה ---
+      sfx('confirm');
+      
+      // 1. שינוי כפתור למצב טעינה
+      verifyBtn.disabled = true;
+      verifyBtn.textContent = copy.continueTxt; // "Verifying..."
+      verifyBtn.style.opacity = "0.8";
+      verifyBtn.innerHTML = `<span>${copy.continueTxt}</span> <span style="display:inline-block; animation:spin 1s linear infinite">⏳</span>`; // אייקון מסתובב בסיסי
+
+      // 2. המתנה קצרה ואז מעבר אוטומטי
+      setTimeout(() => {
+        // בום! קונפטי לפני המעבר
+        confettiBurst(confettiCanvas);
+        sfx('tada');
+        
+        // מעבר מסך
+        setTimeout(() => {
+            screenSuccess();
+        }, 800); // דיליי קצרצר לראות את הקונפטי מתחיל
+      }, 1200);
     });
   }
 
   function screenSuccess(){
     app.innerHTML = `
-  <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+      <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="cap-success-icon" aria-hidden="true">💝</div>
         <h1 class="cap-title">${copy.okTitle}</h1>
         <p class="cap-sub">${copy.okSub}</p>
         <button id="openGift" class="btn cap-cta green">${copy.okBtn}</button>
         ${PREV ? `<div class="cap-hint">Preview only – button disabled</div>` : ``}
+        <canvas id="cap-confetti-final" class="confetti-canvas"></canvas>
       </div>
     `;
+    
+    // עוד קונפטי במסך הסופי לחגיגה
+    const c = document.getElementById('cap-confetti-final');
+    confettiBurst(c);
+
     const btn = document.getElementById('openGift');
     btn.addEventListener('click', ()=>{
       if(PREV) return;
-      try{sfx('confirm')}catch(e){}
-      try{ window.open(GIFT, '_blank', 'noopener'); }catch(e){}
+      sfx('confirm');
+      if(GIFT) try{ window.open(GIFT, '_blank', 'noopener'); }catch(e){}
     });
   }
 
@@ -1929,30 +1941,20 @@ else { document.body.className = ''; }
     const ctx = canvas.getContext('2d');
     const r = window.devicePixelRatio || 1;
     function size(){ canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; ctx.setTransform(r,0,0,r,0,0); }
-    if(!canvas.__sized){ canvas.__sized = true; canvas.style.display='block'; size(); window.addEventListener('resize', size); }
+    canvas.style.display='block'; size();
     const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
     const pieces = [];
-    const w = canvas.clientWidth, h = canvas.clientHeight;
     for(let i=0;i<120;i++){
-      pieces.push({ x:w/2, y:h/2, vx:(Math.random()*4-2), vy:(Math.random()*-3-2),
-        r:Math.random()*6+3, c:colors[(Math.random()*colors.length)|0], a:1, spin:(Math.random()*6.28), vr:(Math.random()*0.2-0.1) });
+      pieces.push({ x:canvas.width/2/r, y:canvas.height/2/r, vx:(Math.random()*4-2), vy:(Math.random()*-3-2), r:Math.random()*6+3, c:colors[(Math.random()*colors.length)|0], a:1 });
     }
-    const g = 0.05; let t=0;
     (function step(){
-      ctx.clearRect(0,0,w,h);
-      pieces.forEach(p=>{
-        p.vy += g; p.x += p.vx; p.y += p.vy; p.spin += p.vr; p.a -= 0.008;
-        ctx.globalAlpha = Math.max(p.a,0);
-        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin);
-        ctx.fillStyle = p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r);
-        ctx.restore();
-      });
-      ctx.globalAlpha = 1;
-      if(t++<260) requestAnimationFrame(step); else ctx.clearRect(0,0,w,h);
+      ctx.clearRect(0,0,canvas.width/r,canvas.height/r);
+      pieces.forEach(p=>{ p.vy+=0.05; p.x+=p.vx; p.y+=p.vy; p.a-=0.008; ctx.globalAlpha=Math.max(p.a,0); ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,p.r,p.r); });
+      ctx.globalAlpha=1;
+      if(pieces.some(p=>p.a>0)) requestAnimationFrame(step); else canvas.style.display='none';
     })();
   }
 
-  // GO
   screenIntro();
 }
   

@@ -1395,6 +1395,8 @@ function voiceVerify(){
       .vv-cow .emoji{
         font-size:120px; line-height:1;
         user-select:none; -webkit-user-drag:none;
+        transition:transform .08s ease-out;
+        will-change:transform;
       }
 
       /* Alert toast overlay – identical look to the reference */
@@ -1477,7 +1479,7 @@ if (activeTheme !== 'dark') { document.body.className = 'theme-' + activeTheme; 
 else { document.body.className = ''; }
 
   const app = document.getElementById('app');
-  app.classList.remove('card'); // “מסך נקי” כמו בשאר הפיצ'רים
+  app.classList.remove('card'); // "מסך נקי" כמו בשאר הפיצ'רים
   // --- SFX gate (voice-verify only): allow only 'error' and 'tada'
 const __sfxGlobal = window.sfx; // שמור מצביע לפונקציית הסאונד הגלובלית של הרנטיים
 function sfx(kind){
@@ -1486,6 +1488,42 @@ function sfx(kind){
   }
   // כל השאר (click / confirm / whoosh ...) – מושתקים כאן מקומית
 }
+
+  // NEW: פונקציה להשמעת סאונד "Moo" סינטטי
+  function playMoo(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = ctx.currentTime;
+      
+      // נוצר צליל "Moo" פשוט עם 2 אוסילטורים
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      // תדרים שמחקים "מווווו"
+      osc1.type = 'sine';
+      osc2.type = 'triangle';
+      osc1.frequency.setValueAtTime(220, now); // נוט A3
+      osc2.frequency.setValueAtTime(110, now); // אוקטבה למטה
+      
+      // Envelope - עליה איטית וירידה
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.3, now + 0.1);
+      gain.gain.linearRampToValueAtTime(0.2, now + 0.4);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+      
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 0.9);
+      osc2.stop(now + 0.9);
+    }catch(e){
+      // Fallback silent אם אין תמיכה
+    }
+  }
 
   // טקסטים לפי הבריף (ניתנים לאובררייד דרך URL אם תרצה)
   const copy = {
@@ -1501,7 +1539,7 @@ function sfx(kind){
     okBtn:      (qs.get('okBtn')      || `Claim your gift!`).slice(0,32)
   };
 
-  // תמונת “פרה” self-contained (SVG emoji) — ללא רשת/אחסון
+  // תמונת "פרה" self-contained (SVG emoji) — ללא רשת/אחסון
   function cowDataURL(){
     const svg =
       `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500'>
@@ -1562,7 +1600,7 @@ function sfx(kind){
     app.innerHTML = `
   <div class="wrap wrap-voice ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <h1 class="vv-title">${copy.recTitle}</h1>
-        <div class="vv-cow" id="vv-cow" aria-hidden="true"><div class="emoji">🐄</div></div>
+        <div class="vv-cow" id="vv-cow" aria-hidden="true"><div class="emoji" id="cow-emoji">🐄</div></div>
 
         <div class="vv-rec">
           <button id="rec-btn" class="btn blue"><span id="rec-label">Start recording</span></button>
@@ -1574,7 +1612,7 @@ function sfx(kind){
         ${ PREV ? `<div class="vv-sub">Preview mode</div>` : `` }
 <div class="toast" id="vv-toast">
   <div class="box">
-    <h3>We couldn't pick up a sound ⚠️</h3>
+    <h3>Too quiet, cow not recognized 🐄</h3>
     <p>Try again - louder and clearer.</p>
     <div style="height:10px"></div>
     <button id="vv-tryagain" class="btn btn-primary">Confirm</button>
@@ -1600,6 +1638,8 @@ function sfx(kind){
     const errEl = document.getElementById('rec-err');
     const wrap  = document.querySelector('.wrap-voice');
     const conf  = document.getElementById('vv-confetti');
+    const cowEmoji = document.getElementById('cow-emoji'); // NEW: רפרנס לאימוג'י
+    
     // Toast #1
 const toast = document.getElementById('vv-toast');
 const tryAgain = document.getElementById('vv-tryagain');
@@ -1645,8 +1685,17 @@ if (tryAgain2) tryAgain2.addEventListener('click', ()=>{ toast2.classList.remove
     }
 
     function loop(){
-      meter.style.width = meterValue() + '%';
+      const level = meterValue();
+      meter.style.width = level + '%';
       time.textContent = fmt(performance.now() - t0);
+      
+      // NEW: אנימציית Pulsing של האימוג'י לפי עוצמת הקול
+      if(cowEmoji && recording){
+        // ממירים 0-100 ל-scale של 1.0-1.4
+        const scale = 1.0 + (level / 100) * 0.4;
+        cowEmoji.style.transform = `scale(${scale})`;
+      }
+      
       raf = requestAnimationFrame(loop);
     }
 
@@ -1692,6 +1741,9 @@ if (tryAgain2) tryAgain2.addEventListener('click', ()=>{ toast2.classList.remove
       window.clearTimeout(autoStop);
       cancelAnimationFrame(raf);
       cleanupAudio();
+      
+      // NEW: איפוס סקייל של האימוג'י
+      if(cowEmoji) cowEmoji.style.transform = 'scale(1)';
 
       attempt += 1;
 
@@ -1735,10 +1787,17 @@ screenSuccess(); // הקונפטי ירוץ רק במסך ההצלחה
         <canvas id="vv-confetti" class="confetti-canvas"></canvas>
       </div>
     `;
-    const btn = document.getElementById('vv-open');
-    const canvas = document.getElementById('vv-confetti');
-    confettiBurst(canvas);
+    
+    // NEW: השמעת "Moo" לפני הקונפטי
+    playMoo();
+    
+    // המתנה קצרה ואז קונפטי
+    setTimeout(()=>{
+      const canvas = document.getElementById('vv-confetti');
+      confettiBurst(canvas);
+    }, 400);
 
+    const btn = document.getElementById('vv-open');
     btn.addEventListener('click', ()=>{
       if(PREV) return;
       try{sfx('confirm')}catch(e){}

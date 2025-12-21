@@ -1897,7 +1897,7 @@ function captcha(){
       verifyBtn.style.opacity = "0.8";
       verifyBtn.innerHTML = `<span>${copy.continueTxt}</span> <span style="display:inline-block; animation:spin 1s linear infinite">⏳</span>`; // אייקון מסתובב בסיסי
 
-      // 2. המתנה קצרה ואז מעבר אוטומטי
+// 2. המתנה קצרה ואז מעבר אוטומטי
       setTimeout(() => {
         // בום! קונפטי לפני המעבר
         confettiBurst(confettiCanvas);
@@ -1906,7 +1906,7 @@ function captcha(){
         // מעבר מסך
         setTimeout(() => {
             screenSuccess();
-        }, 800); // דיליי קצרצר לראות את הקונפטי מתחיל
+        }, 800);
       }, 1200);
     });
   }

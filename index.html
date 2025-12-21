@@ -2434,197 +2434,115 @@ else { document.body.className = ''; }
   
 // ===== Shake (MOBILE) =====
 function shake(){
-  // --- Params & setup (Runtime contract) ---
+  // --- Params & setup ---
   const qs   = new URLSearchParams(location.search);
   const PREV = (qs.get('preview')||'0').trim()==='1';
   const NAME = (qs.get('name')||'Friend').trim();
-  const GIFT = normalizeUrl(qs.get('giftUrl'));
+  const GIFT = qs.get('giftUrl'); // יטופל בפתיחה
+  
+  // Theme
   const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
-const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
-const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
-if (activeTheme !== 'dark') { document.body.className = 'theme-' + activeTheme; } 
-else { document.body.className = ''; }
+  const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
+  const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
+  if (activeTheme !== 'dark') { document.body.className = 'theme-' + activeTheme; } 
+  else { document.body.className = ''; }
 
-  // Copy with URL overrides (all English by default per brief)
+  // Copy
   const copy = {
     introTitle: (qs.get('introTitle') || `${NAME}, you've got a sweet surprise! 💖`).slice(0,80),
     introSub:   (qs.get('introSub')   || `To claim it, please verify your identity. Tap below for a quick check.`).slice(0,120),
     introBtn:   (qs.get('introBtn')   || `Verify identity to get the gift`).slice(0,48),
-
     countTitle: (qs.get('countTitle') || `When the countdown ends, shake your phone`).slice(0,80),
     shakeHint:  (qs.get('shakeHint')  || `Shake now!`).slice(0,40),
-
     err1Title:  (qs.get('err1Title')  || `Error ⚠️`).slice(0,40),
     err1Text:   (qs.get('err1Text')   || `We couldn’t verify it. Try again.`).slice(0,120),
-
     err2Title:  (qs.get('err2Title')  || `Hmm… still not it`).slice(0,40),
     err2Text:   (qs.get('err2Text')   || `Try shaking to the other side.`).slice(0,120),
-
     err3Title:  (qs.get('err3Title')  || `Shake harder! Didn’t eat breakfast? 😈`).slice(0,80),
     err3Text:   (qs.get('err3Text')   || `Give it your best shot.`).slice(0,120),
-
     okTitle:    (qs.get('okTitle')    || `You earned it 🤣`).slice(0,80),
     okSub:      (qs.get('okSub')      || `Ready for the real gift?`).slice(0,120),
     okBtn:      (qs.get('okBtn')      || `To the real gift`).slice(0,40),
     love:       (qs.get('love')       || `Love you 😘`).slice(0,40)
   };
 
-  // --- CSS injection (scoped & centered, Assistant font) ---
-  (function injectCSS(){
-    if (document.getElementById('shake-ux')) return;
+  // CSS Injection
+  if (!document.getElementById('shake-ux')){
     const css = `
-      /* Prefer Assistant; fallback to system. The font itself loads in Main. */
       body, .phone, .wrap, #app { font-family: 'Assistant', system-ui, Segoe UI, Roboto, Helvetica, Arial; }
-
-      .wrap-shake{
-        display:grid; gap:32px; justify-items:center; text-align:center;
-        margin-top:clamp(32px, 8vh, 64px);
-        padding-bottom:24px;
-      }
-      
-      /* אייקון מתנה מעל הכותרת */
-      .sh-gift-icon{
-        width:56px; height:56px; border-radius:16px;
-        background:linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
-        border:1px solid rgba(255,255,255,.08);
-        display:flex; align-items:center; justify-content:center;
-        font-size:28px; line-height:1;
-        box-shadow:0 8px 24px rgba(0,0,0,.15);
-        animation:shIconFloat 3s ease-in-out infinite;
-      }
-      @keyframes shIconFloat{
-        0%, 100%{ transform:translateY(0px) }
-        50%{ transform:translateY(-6px) }
-      }
-      
-      /* אייקון הצלחה */
-      .sh-success-icon{
-        width:64px; height:64px; border-radius:20px;
-        background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(52,211,153,0.15));
-        border:1px solid rgba(16,185,129,.2);
-        display:flex; align-items:center; justify-content:center;
-        font-size:32px; line-height:1;
-        box-shadow:0 8px 32px rgba(16,185,129,.2);
-        animation:shSuccessPop .5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      }
-      @keyframes shSuccessPop{
-        0%{ transform:scale(0) rotate(-45deg); opacity:0 }
-        100%{ transform:scale(1) rotate(0); opacity:1 }
-      }
-      
+      .wrap-shake{ display:grid; gap:32px; justify-items:center; text-align:center; margin-top:clamp(32px, 8vh, 64px); padding-bottom:24px; }
+      .sh-gift-icon{ width:56px; height:56px; border-radius:16px; background:linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12)); border:1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; font-size:28px; line-height:1; box-shadow:0 8px 24px rgba(0,0,0,.15); animation:shIconFloat 3s ease-in-out infinite; }
+      @keyframes shIconFloat{ 0%, 100%{ transform:translateY(0px) } 50%{ transform:translateY(-6px) } }
+      .sh-success-icon{ width:64px; height:64px; border-radius:20px; background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(52,211,153,0.15)); border:1px solid rgba(16,185,129,.2); display:flex; align-items:center; justify-content:center; font-size:32px; line-height:1; box-shadow:0 8px 32px rgba(16,185,129,.2); animation:shSuccessPop .5s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+      @keyframes shSuccessPop{ 0%{ transform:scale(0) rotate(-45deg); opacity:0 } 100%{ transform:scale(1) rotate(0); opacity:1 } }
       .sh-title{ margin:0; font-size:28px; line-height:1.3; font-weight:800; letter-spacing:-0.02em }
       .sh-sub{ margin:0; font-size:16px; color:#9aa3b2; line-height:1.5; opacity:.85 }
-      .sh-cta{ 
-        width:min(300px,100%); min-height:52px; padding:16px 20px; font-size:16px;
-        border-radius:12px; font-weight:700; margin:0 auto;
-        transition:transform .15s ease, box-shadow .15s ease;
-        box-shadow:0 4px 16px rgba(0,0,0,.2);
-      }
-      .sh-cta:hover{
-        transform:translateY(-2px);
-        box-shadow:0 8px 24px rgba(0,0,0,.3);
-      }
+      .sh-cta{ width:min(300px,100%); min-height:52px; padding:16px 20px; font-size:16px; border-radius:12px; font-weight:700; margin:0 auto; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 4px 16px rgba(0,0,0,.2); }
+      .sh-cta:hover{ transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.3); }
       .sh-cta:active{ transform:translateY(0) }
       .green{ background:#10b981; color:#fff }
       .brand{ background:#282D3F; color:#fff; border:1px solid rgba(255,255,255,.1) }
-      .ghost{ background:#0b1020; color:#9aa3b2; border:1px solid rgba(255,255,255,.12) }
-      .sh-row{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center }
-
       .sh-count{ font-size:92px; font-weight:900; line-height:1; letter-spacing:.5px; margin:6px 0 2px }
       .sh-zone{ display:grid; gap:12px; justify-items:center; }
-      .sh-phone{
-        width:min(220px,70vw); aspect-ratio:9/16; border-radius:22px;
-        border:1px solid rgba(255,255,255,.10); background:#12182b;
-        box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 20px 40px rgba(0,0,0,.35);
-        display:grid; align-content:center; justify-items:center; gap:8px; padding:14px;
-        user-select:none; position:relative;
-      }
+      .sh-phone{ width:min(220px,70vw); aspect-ratio:9/16; border-radius:22px; border:1px solid rgba(255,255,255,.10); background:#12182b; box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 20px 40px rgba(0,0,0,.35); display:grid; align-content:center; justify-items:center; gap:8px; padding:14px; user-select:none; position:relative; }
       .sh-emoji{ font-size:54px; line-height:1; }
       .sh-emoji.fill{ font-size:120px; }
-      .sh-hint-in{
-        font-size:14px; font-weight:900; color:#e8ecf4; letter-spacing:.2px;
-        background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
-        padding:6px 10px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.25);
-        animation: shPulse 1.2s ease-in-out infinite alternate;
-      }
+      .sh-hint-in{ font-size:14px; font-weight:900; color:#e8ecf4; letter-spacing:.2px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); padding:6px 10px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,.25); animation: shPulse 1.2s ease-in-out infinite alternate; }
       @keyframes shPulse{ from{ transform:translateY(0) scale(1) } to{ transform:translateY(-2px) scale(1.02) } }
-      .sh-hint{ font-size:14px; color:#cbd5e1; font-weight:700 }
       .sh-meter{ height:10px; width:min(320px,100%); border-radius:999px; overflow:hidden; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.08) }
       .sh-meter > i{ display:block; height:100%; width:0%; background:linear-gradient(90deg,#60a5fa,#a78bfa); transition:width .06s linear }
-
-      .sh-toast{ position:fixed; inset:0; display:none; place-items:center;
-        background:rgba(10,12,22,.55); backdrop-filter:blur(6px); z-index:1000; padding:24px; text-align:center }
+      .sh-toast{ position:fixed; inset:0; display:none; place-items:center; background:rgba(10,12,22,.55); backdrop-filter:blur(6px); z-index:1000; padding:24px; text-align:center }
       .sh-toast.show{ display:grid }
       .sh-toast .box{ background:#1a1f35; border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.4); max-width:320px }
       .sh-toast h3{ margin:0 0 6px 0 }
-
       @keyframes wobble { 0%,100%{transform:translateX(0) rotate(0)} 15%{transform:translateX(-6px) rotate(-2deg)} 30%{transform:translateX(6px) rotate(2deg)} 45%{transform:translateX(-4px) rotate(-1deg)} 60%{transform:translateX(4px) rotate(1deg)} 75%{transform:translateX(-2px) rotate(-1deg)} }
       .wobble{ animation:wobble .9s ease-in-out infinite }
-
-      /* reuse gentle shake keyframes from skeleton (.shake class) */
-      .shake{ animation:infShake .35s linear 1 }
-
-      /* Confetti canvas (identical pattern to other features) */
       .confetti-canvas{ position:fixed; inset:0; pointer-events:none; z-index:999; display:none }
+      .shake{ animation:infShake .35s linear 1 }
     `;
     const st = document.createElement('style'); st.id='shake-ux'; st.textContent=css;
     (document.head || document.documentElement).appendChild(st);
-  })();
+  }
 
   const app = document.getElementById('app');
-  app.classList.remove('card'); // "מסך נקי" כמו שאר הפיצ'רים.  :contentReference[oaicite:8]{index=8}
+  app.classList.remove('card');
 
-  // --- Confetti (same engine used in runtime skeleton) ---
+  function sfx(k){ try{ window.sfx(k); }catch(_){} }
+
+  // Confetti
   function confettiBurst(canvas){
     if(!canvas) return;
     const ctx = canvas.getContext('2d');
     const r = window.devicePixelRatio || 1;
     function size(){ canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; ctx.setTransform(r,0,0,r,0,0); }
-    if(!canvas.__sized){ canvas.__sized = true; canvas.style.display='block'; size(); addEventListener('resize', size); }
+    canvas.style.display='block'; size();
     const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
     const pieces = [];
-    const w = canvas.clientWidth, h = canvas.clientHeight;
-    for(let i=0;i<120;i++){
-      pieces.push({ x:w/2, y:h/2, vx:(Math.random()*4-2), vy:(Math.random()*-3-2),
-        r:Math.random()*6+3, c:colors[(Math.random()*colors.length)|0], a:1, spin:(Math.random()*6.28), vr:(Math.random()*0.2-0.1) });
-    }
-    const g = 0.05; let t=0;
+    for(let i=0;i<120;i++){ pieces.push({x:canvas.width/2/r, y:canvas.height/2/r, vx:(Math.random()*4-2), vy:(Math.random()*-3-2), r:Math.random()*6+3, c:colors[Math.floor(Math.random()*colors.length)], a:1}); }
     (function step(){
-      ctx.clearRect(0,0,w,h);
-      pieces.forEach(p=>{
-        p.vy += g; p.x += p.vx; p.y += p.vy; p.spin += p.vr; p.a -= 0.008;
-        ctx.globalAlpha = Math.max(p.a,0);
-        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin);
-        ctx.fillStyle = p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r);
-        ctx.restore();
-      });
-      ctx.globalAlpha = 1;
-      if(t++<260) requestAnimationFrame(step); else ctx.clearRect(0,0,w,h);
+      ctx.clearRect(0,0,canvas.width/r,canvas.height/r);
+      pieces.forEach(p=>{ p.vy+=0.05; p.x+=p.vx; p.y+=p.vy; p.a-=0.008; ctx.globalAlpha=Math.max(p.a,0); ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,p.r,p.r); });
+      ctx.globalAlpha=1;
+      if(pieces.some(p=>p.a>0)) requestAnimationFrame(step); else canvas.style.display='none';
     })();
   }
 
-  // --- Shake sensor (optional; we still force first 3 attempts to "fail" for the prank) ---
+  // Motion Sensor logic
   let motionOn = false, last = {x:0,y:0,z:0}, handler = null;
   function startMotion(onLevel){
-    // iOS permission
     try{
       if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function'){
-        DeviceMotionEvent.requestPermission().then(st=>{
-          if(st==='granted') attach(); // else: silent fallback
-        }).catch(()=>{ /* ignore */ });
-      } else {
-        attach();
-      }
-    }catch(_){ /* no sensor - ignore */ }
+        DeviceMotionEvent.requestPermission().then(st=>{ if(st==='granted') attach(); }).catch(()=>{});
+      } else { attach(); }
+    }catch(_){}
 
     function attach(){
       if (handler) return;
       handler = (e)=>{
         const acc = e.accelerationIncludingGravity || e.acceleration || {x:0,y:0,z:0};
-        // very light high-pass: diff between frames
         const dx = (acc.x||0) - last.x, dy=(acc.y||0)-last.y, dz=(acc.z||0)-last.z;
         last = {x:acc.x||0, y:acc.y||0, z:acc.z||0};
-        let mag = Math.sqrt(dx*dx + dy*dy + dz*dz) * 5; // scale up for UI
+        let mag = Math.sqrt(dx*dx + dy*dy + dz*dz) * 5; 
         mag = Math.max(0, Math.min(100, Math.floor(mag)));
         onLevel && onLevel(mag);
       };
@@ -2637,12 +2555,12 @@ else { document.body.className = ''; }
     handler = null; motionOn = false;
   }
 
-  // --- Flow screens ---
-  let attempt = 0; // 1..3 = forced error; 4 = success
+  let attempt = 0; 
+  let trollInterval = null;
 
   function screenIntro(){
     app.innerHTML = `
-  <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+      <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="sh-gift-icon" aria-hidden="true">🎁</div>
         <h1 class="sh-title">${copy.introTitle}</h1>
         <p class="sh-sub">${copy.introSub}</p>
@@ -2650,89 +2568,136 @@ else { document.body.className = ''; }
         <div class="sh-sub" style="font-size:12px">no data collected</div>
       </div>
     `;
-    document.getElementById('shStart')?.addEventListener('click', ()=>{ runAttempt(); }, { once:true });
+    document.getElementById('shStart')?.addEventListener('click', ()=>{ sfx('confirm'); runAttempt(); }, { once:true });
   }
 
-function runAttempt(){
-  attempt += 1;
-  stopMotion(); // reset any previous
+  function runAttempt(){
+    attempt += 1;
+    stopMotion();
+    clearInterval(trollInterval);
 
-  // חדש: האם להציג ספירה לאחור? לא בניסיון האחרון (אחרי הטעות השלישית)
-  const showCountdown = attempt <= 3;
+    // לוגיקה חדשה: ספירה לאחור רק בפעם הראשונה
+    const showCountdown = (attempt === 1);
+    
+    // כותרת משתנה: בהתחלה ספירה, אחר כך הוראה
+    let titleText = copy.countTitle;
+    if (!showCountdown) titleText = "Shake harder! 📱";
 
-  app.innerHTML = `
-  <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
-      <h1 class="sh-title">${showCountdown ? copy.countTitle : 'Shake it harder, hero'}</h1>
-      <div id="shCount" class="sh-count" style="${showCountdown ? '' : 'display:none'}">5</div>
+    app.innerHTML = `
+      <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <h1 class="sh-title">${titleText}</h1>
+        <div id="shCount" class="sh-count" style="${showCountdown ? '' : 'display:none'}">3</div>
 
-      <div class="sh-zone" id="shZone" style="${showCountdown ? 'display:none' : 'display:grid'}">
-        <div class="sh-phone wobble" aria-hidden="true">
-          <div id="shHintIn" class="sh-hint-in">${copy.shakeHint}</div>
-          <div id="shEmoji" class="sh-emoji ${attempt>=4 ? 'fill' : ''}">${attempt>=4 ? '🤣' : '📱'}</div>
+        <div class="sh-zone" id="shZone" style="${showCountdown ? 'display:none' : 'display:grid'}">
+          <div class="sh-phone wobble" aria-hidden="true">
+            <div id="shHintIn" class="sh-hint-in">${copy.shakeHint}</div>
+            <div id="shEmoji" class="sh-emoji ${attempt>=4 ? 'fill' : ''}">${attempt>=4 ? '🤣' : '📱'}</div>
+          </div>
+          <div class="sh-meter"><i id="shBar"></i></div>
         </div>
-        <div class="sh-meter"><i id="shBar"></i></div>
+        <canvas id="shConfetti" class="confetti-canvas"></canvas>
       </div>
 
-      ${ PREV ? `<div class="sh-sub">Get ready to shake your phone!</div>` : `` }
-      <canvas id="shConfetti" class="confetti-canvas"></canvas>
-    </div>
+      <div id="shErr1" class="sh-toast"><div class="box"><h3>${copy.err1Title}</h3><p>${copy.err1Text}</p><div style="height:10px"></div><button class="btn sh-cta green" data-ok>Try again</button></div></div>
+      <div id="shErr2" class="sh-toast"><div class="box"><h3>${copy.err2Title}</h3><p>${copy.err2Text}</p><div style="height:10px"></div><button class="btn sh-cta green" data-ok>Try again</button></div></div>
+      <div id="shErr3" class="sh-toast"><div class="box"><h3>${copy.err3Title}</h3><p>${copy.err3Text}</p><div style="height:10px"></div><button class="btn sh-cta green" data-ok>Try again, hero!</button></div></div>
+    `;
 
-    <!-- three toasts (errors) -->
-    <div id="shErr1" class="sh-toast"><div class="box"><h3>${copy.err1Title}</h3><p>${copy.err1Text}</p><div style="height:10px"></div><button class="btn sh-cta green" data-ok>Try again</button></div></div>
-    <div id="shErr2" class="sh-toast"><div class="box"><h3>${copy.err2Title}</h3><p>${copy.err2Text}</p><div style="height:10px"></div><button class="btn sh-cta green" data-ok>Try again</button></div></div>
-    <div id="shErr3" class="sh-toast"><div class="box"><h3>${copy.err3Title}</h3><p>${copy.err3Text}</p><div style="height:10px"></div><button class="btn sh-cta green" data-ok>Try again, hero!</button></div></div>
-  `;
+    const cnt = document.getElementById('shCount');
+    const zone = document.getElementById('shZone');
+    const bar  = document.getElementById('shBar');
 
-  const cnt = document.getElementById('shCount');
-  const zone = document.getElementById('shZone');
-  const bar  = document.getElementById('shBar');
-
-  if (showCountdown){
-    // (כמו קודם) ספירה לאחור → ואז מצב Shake
-    let n = 5;
-    cnt.textContent = String(n);
-    const t = setInterval(()=>{
-      n -= 1;
-      if(n<=0){
-        clearInterval(t);
-        cnt.style.display='none';
-        zone.style.display='grid';
-        startMotion(level => { if(bar) bar.style.width = level + '%'; });
-
-        // אחרי ~5ש׳׳: טעות או הצלחה
-        setTimeout(()=>{
-          stopMotion();
-          if (attempt <= 3){
-            document.querySelector('.wrap-shake')?.classList.add('shake');
-            setTimeout(()=>document.querySelector('.wrap-shake')?.classList.remove('shake'), 380);
-            (document.getElementById('shErr'+attempt)).classList.add('show');
-            document.querySelectorAll('#shErr'+attempt+' [data-ok]').forEach(btn=>{
-              btn.addEventListener('click', ()=>{
-                (document.getElementById('shErr'+attempt)).classList.remove('show');
-                runAttempt();
-              }, { once:true });
-            });
-          } else {
-            screenSuccess();
-          }
-        }, 5000);
-      } else {
-        cnt.textContent = String(n);
-      }
-    }, 1000);
-  } else {
-    // חדש: אין ספירה לאחור בניסיון האחרון — ישר מצב Shake
-    startMotion(level => { if(bar) bar.style.width = level + '%'; });
-    setTimeout(()=>{
+    // פונקציית סיום הניעור (כישלון או הצלחה)
+    const finishShake = () => {
       stopMotion();
-      screenSuccess();
-    }, 5000);
+      clearInterval(trollInterval);
+
+      if (attempt <= 3){
+        // כישלון
+        document.querySelector('.wrap-shake')?.classList.add('shake');
+        setTimeout(()=>document.querySelector('.wrap-shake')?.classList.remove('shake'), 380);
+        
+        sfx('error');
+        const toast = document.getElementById('shErr'+attempt);
+        if(toast) toast.classList.add('show');
+        
+        // לחיצה על כפתור השגיאה מחזירה מיד לניסיון הבא
+        document.querySelectorAll('#shErr'+attempt+' [data-ok]').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            toast.classList.remove('show');
+            runAttempt(); // ריצה חוזרת מיידית
+          }, { once:true });
+        });
+      } else {
+        // הצלחה
+        screenSuccess();
+      }
+    };
+
+    // --- לוגיקת ה-Troll Bar (ניסיון 3) ---
+    const simulateTrollBar = () => {
+      let p = 0;
+      let phase = 'up'; // up, stall, drop
+      
+      trollInterval = setInterval(() => {
+        if (phase === 'up') {
+          p += 4; // עולה מהר
+          if (p >= 98) { 
+            p = 98; 
+            phase = 'stall'; 
+            // אחרי שנייה של תקיעה -> נופל
+            setTimeout(() => { phase = 'drop'; }, 800);
+          }
+        } else if (phase === 'stall') {
+          // רועד קצת ב-98%
+          p = 98 + (Math.random() * 2 - 1);
+        } else if (phase === 'drop') {
+          p -= 10; // נופל בבום
+          if (p <= 0) {
+            p = 0;
+            clearInterval(trollInterval);
+            finishShake(); // מפעיל את השגיאה
+          }
+        }
+        if (bar) bar.style.width = p + '%';
+      }, 30);
+    };
+
+    // --- ניהול הזרימה ---
+    if (showCountdown){
+      // פעם ראשונה: ספירה 3..2..1 ואז מתחיל
+      let n = 3; // קיצרנו מ-5 ל-3
+      cnt.textContent = String(n);
+      const t = setInterval(()=>{
+        n -= 1;
+        if(n<=0){
+          clearInterval(t);
+          cnt.style.display='none';
+          zone.style.display='grid';
+          startMotion(level => { if(bar) bar.style.width = level + '%'; });
+          setTimeout(finishShake, 4000); // זמן ניעור רגיל
+        } else {
+          cnt.textContent = String(n);
+        }
+      }, 1000);
+    } else {
+      // פעמים הבאות: מיידי
+      if (attempt === 3) {
+        // ניסיון 3: הפעלת ה-Troll Bar המזויף
+        simulateTrollBar();
+      } else {
+        // ניסיון 2 ו-4: ניעור רגיל (או הצלחה)
+        startMotion(level => { if(bar) bar.style.width = level + '%'; });
+        // בניסיון 4 ניתן להם פחות זמן המתנה (2 שניות) להצלחה מהירה
+        const waitTime = (attempt >= 4) ? 2000 : 4000;
+        setTimeout(finishShake, waitTime);
+      }
+    }
   }
-}
 
   function screenSuccess(){
     app.innerHTML = `
-  <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+      <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="sh-success-icon" aria-hidden="true">💝</div>
         <h1 class="sh-title">${copy.okTitle}</h1>
         <p class="sh-sub">${copy.okSub}</p>
@@ -2742,17 +2707,18 @@ function runAttempt(){
         <canvas id="shConfetti2" class="confetti-canvas"></canvas>
       </div>
     `;
+    sfx('tada');
     confettiBurst(document.getElementById('shConfetti2'));
     document.getElementById('shOpen')?.addEventListener('click', ()=>{
       if(PREV) return;
+      sfx('confirm');
       try{ window.open(GIFT, '_blank', 'noopener'); }catch(_){}
     });
   }
 
-  // GO
   screenIntro();
 }
-
+  
 // פיצ'ר חדש: breath-verify (bv)
 function breathVerify(){
   // --- פרמטרים מה-URL (חוזה Runtime v3.5) ---

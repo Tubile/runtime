@@ -2189,8 +2189,8 @@ function infinite(){
 function narcissist() {
   const qs = new URLSearchParams(location.search);
   const PREV = (qs.get('preview') || '0').trim() === '1';
-  
-  // --- תיקון ה-URL הקבוע (כפי שסיכמנו) ---
+
+  // --- תיקון ה-URL (Inline Fix) ---
   let _g = qs.get('giftUrl') || '';
   const GIFT = (_g && !_g.match(/^http/)) ? 'https://' + _g : _g;
 
@@ -2210,29 +2210,32 @@ function narcissist() {
     okBtn: (qs.get('okBtn') || `Claim my tribute`).slice(0, 32),
   };
 
-  // הוספת סגנונות CSS דינמית עבור הבועיות (Toast)
-  const style = document.createElement('style');
-  style.innerHTML = `
-    .narc-toast {
-      position: fixed;
-      background: #ff4757;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-weight: bold;
-      font-size: 14px;
-      pointer-events: none;
-      animation: floatUp 0.8s ease-out forwards;
-      z-index: 1000;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    @keyframes floatUp {
-      0% { opacity: 0; transform: translate(-50%, 10px) scale(0.8); }
-      20% { opacity: 1; transform: translate(-50%, 0) scale(1.1); }
-      100% { opacity: 0; transform: translate(-50%, -40px) scale(1); }
-    }
-  `;
-  document.head.appendChild(style);
+  // הוספת סגנונות CSS לבועות הדיבור
+  if (!document.getElementById('narc-style')) {
+    const style = document.createElement('style');
+    style.id = 'narc-style';
+    style.innerHTML = `
+      .narc-toast {
+        position: fixed;
+        background: #ff4757;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 14px;
+        pointer-events: none;
+        animation: floatUp 0.8s ease-out forwards;
+        z-index: 1000;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      }
+      @keyframes floatUp {
+        0% { opacity: 0; transform: translate(-50%, 10px) scale(0.8); }
+        20% { opacity: 1; transform: translate(-50%, 0) scale(1.1); }
+        100% { opacity: 0; transform: translate(-50%, -40px) scale(1); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
 
   const questions = [
     { q: "Who is the most interesting person in the room?", a1: "Me, obviously", a2: "Probably the host" },
@@ -2247,7 +2250,7 @@ function narcissist() {
 
   function sfx(k) { try { window.sfx(k); } catch (e) { } }
 
-  // רשימת העלבות חמודות
+  // העלבות חמודות
   const insults = ["Liar!", "Don't be shy!", "Yeah right...", "Be honest!", "Oh please 🙄"];
 
   function showToast(rect) {
@@ -2255,7 +2258,7 @@ function narcissist() {
     toast.className = 'narc-toast';
     toast.innerText = insults[Math.floor(Math.random() * insults.length)];
     
-    // מיקום הבועית מעל הכפתור שנלחץ
+    // חישוב מיקום
     const top = rect.top;
     const left = rect.left + (rect.width / 2);
     
@@ -2275,7 +2278,8 @@ function narcissist() {
         <button id="start" class="btn narc-btn">${copy.introBtn}</button>
       </div>
     `;
-    document.getElementById('start').onclick = () => { sfx('confirm'); renderQ(); };
+    const startBtn = document.getElementById('start');
+    if(startBtn) startBtn.onclick = () => { sfx('confirm'); renderQ(); };
   }
 
   function renderQ() {
@@ -2296,27 +2300,23 @@ function narcissist() {
     app.querySelectorAll('.narc-opt').forEach(btn => {
       btn.onclick = (e) => {
         const type = e.target.dataset.type;
-        const rect = e.target.getBoundingClientRect(); // מיקום לכפתור
+        const rect = e.target.getBoundingClientRect();
 
         if (type === 'narc') {
-          // --- תשובה נכונה (נרקיסיסטית) ---
+          // נרקיסיסט - תשובה נכונה
           sfx('click');
-          e.target.classList.add('selected'); // סימון ירוק/נבחר
+          e.target.classList.add('selected');
           
-          // מעבר מהיר בטירוף (300ms)
           setTimeout(() => {
             qIndex++;
             renderQ();
           }, 300);
 
         } else {
-          // --- תשובה לא נכונה (צנועה) ---
+          // צנוע - תשובה שגויה
           sfx('error');
-          // אפקט רעידה
           e.target.style.animation = 'shake 0.4s';
           setTimeout(() => e.target.style.animation = '', 400);
-          
-          // הקפצת הבועה
           showToast(rect);
         }
       };
@@ -2335,21 +2335,22 @@ function narcissist() {
       </div>
     `;
 
-    // הפעלת קונפטי בסיום
     const c = document.getElementById('narc-confetti');
-    if (window.confettiBurst) window.confettiBurst(c); // אם יש את הפונקציה הגלובלית
-    else if (window.confetti) window.confetti(); // גיבוי
+    // בדיקה בטוחה לקונפטי
+    if (window.confettiBurst) window.confettiBurst(c);
+    else if (window.confetti) window.confetti(); 
 
     sfx('tada');
 
-    document.getElementById('claim').onclick = () => {
+    const claimBtn = document.getElementById('claim');
+    if(claimBtn) claimBtn.onclick = () => {
       if (PREV) return;
       sfx('confirm');
       if (GIFT) try { window.open(GIFT, '_blank', 'noopener'); } catch (e) { }
     };
   }
 
-  // הגדרת אנימציית רעידה אם לא קיימת
+  // הגדרת אנימציית רעידה
   if (!document.getElementById('shake-style')) {
     const s = document.createElement('style');
     s.id = 'shake-style';

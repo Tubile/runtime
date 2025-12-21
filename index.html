@@ -1963,7 +1963,7 @@ function infinite(){
   // קריאת פרמטרים והגדרות בסיס
   const qs = new URLSearchParams(location.search);
   const NAME = (qs.get('name')||'Friend').trim();
-  const GIFT = qs.get('giftUrl'); // URL רגיל, יטופל בפתיחה
+  const GIFT = qs.get('giftUrl'); 
   
   // הגדרת Theme
   const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
@@ -1973,19 +1973,22 @@ function infinite(){
   else { document.body.className = ''; }
 
   const titleOverride = qs.get('title');
+  // שומרים על כל 8 הפרמטרים מהמסמך המקורי
   const copy = {
     title: titleOverride ? titleOverride : `${NAME}, you've got a sweet surprise! 💖`,
     subtitle: (qs.get('subtitle') || 'Click the button to get your gift').slice(0,80),
     btn1_loading: (qs.get('btn1_loading') || 'Loading... hold on').slice(0,40),
-    btn2_error: (qs.get('btn2_error') || 'System Error 304').slice(0,40), // שגיאה טכנית יותר
-    btn3_tease1: (qs.get('btn3_tease1') || 'Whoops! Missed it').slice(0,40),
-    btn4_tease2: (qs.get('btn4_tease2') || 'Catch me if you can! 😈').slice(0,40),
-    btn5_tease3: (qs.get('btn5_tease3') || 'Too slow! 😂').slice(0,40),
+    btn2_error: (qs.get('btn2_error') || 'System Error 304').slice(0,40), 
+    btn3_tease1: (qs.get('btn3_tease1') || 'Error! Click again').slice(0,40),
+    btn4_tease2: (qs.get('btn4_tease2') || 'Try to click harder').slice(0,40),
+    btn5_tease3: (qs.get('btn5_tease3') || 'You love being trolled?').slice(0,40),
+    btn6_tease4: (qs.get('btn6_tease4') || 'Admit it, this is fun 😈').slice(0,40),
+    btn7_tease5: (qs.get('btn7_tease5') || 'Almost there... or not? 🤭').slice(0,40),
     btn8_success: (qs.get('btn8_success') || 'Claim your real gift').slice(0,40),
-    earned: (qs.get('earned') || 'Okay, you earned it 🤣').slice(0,80)
+    earned: (qs.get('earned') || 'You earned it 🤣').slice(0,80)
   };
 
-  // בניית המסך (HTML)
+  // בניית המסך
   const inner = document.createElement('div');
   inner.className = 'wrap wrap-infinite' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '');
   inner.innerHTML = `
@@ -2009,7 +2012,7 @@ function infinite(){
   app.replaceChildren(inner);
   document.getElementById('app').classList.remove('card');
 
-  // משתנים ושמירת אלמנטים
+  // משתנים
   const btn = document.getElementById('ibtn');
   const ilabel = document.getElementById('ilabel');
   const ipct = document.getElementById('ipct');
@@ -2017,24 +2020,16 @@ function infinite(){
   const progWrap = document.getElementById('iprogress');
   let canvas = document.getElementById('confetti');
 
-  // משתני מצב (State)
+  // ניהול שלבים (Tap Counter)
   let tap = 0;
   let loading = false;
   let success = false;
 
-  // פונקציות עזר
   function sfx(k){ try{ window.sfx(k); }catch(_){} }
-  
-  function openGift(){ 
-    if(GIFT) try { window.open(GIFT, '_blank', 'noopener'); } catch(e) {}
-  }
-  
-  function resetBtn(){ 
-    btn.className = 'btn brand'; 
-    inner.classList.remove('shake'); 
-  }
-  
-  // מנוע קונפטי פשוט
+  function openGift(){ if(GIFT) try { window.open(GIFT, '_blank', 'noopener'); } catch(e) {} }
+  function resetBtn(){ btn.className = 'btn brand'; inner.classList.remove('shake'); }
+
+  // קונפטי
   function boom(){
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -2043,9 +2038,7 @@ function infinite(){
     canvas.style.display='block'; size();
     const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
     const pieces = [];
-    for(let i=0;i<120;i++){
-      pieces.push({x:canvas.width/2/r, y:canvas.height/2/r, vx:(Math.random()*4-2), vy:(Math.random()*-3-2), r:Math.random()*6+3, c:colors[Math.floor(Math.random()*colors.length)], a:1});
-    }
+    for(let i=0;i<120;i++){ pieces.push({x:canvas.width/2/r, y:canvas.height/2/r, vx:(Math.random()*4-2), vy:(Math.random()*-3-2), r:Math.random()*6+3, c:colors[Math.floor(Math.random()*colors.length)], a:1}); }
     (function step(){
       ctx.clearRect(0,0,canvas.width/r,canvas.height/r);
       pieces.forEach(p=>{ p.vy+=0.05; p.x+=p.vx; p.y+=p.vy; p.a-=0.008; ctx.globalAlpha=Math.max(p.a,0); ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,p.r,p.r); });
@@ -2054,31 +2047,31 @@ function infinite(){
     })();
   }
 
-  // לוגיקת "בריחה" של הכפתור
+  // מנגנון הבריחה (מופעל משלב 4 ואילך)
   function makeDodge(){
-    // הבריחה קורית גם במעבר עכבר וגם בנגיעה במסך
     const runAway = function(e){
       if(success) return;
-      // חישוב כיוון רנדומלי
-      const x = (Math.random() * 160) - 80; // זוז שמאלה/ימינה
-      const y = (Math.random() * 100) - 50; // זוז למעלה/למטה
+      // הבריחה קורית רק אם המשתמש מנסה לגעת בכפתור
+      const x = (Math.random() * 140) - 70; 
+      const y = (Math.random() * 80) - 40;
       btn.style.transform = `translate(${x}px, ${y}px) rotate(${Math.random()*10-5}deg)`;
       sfx('whoosh');
       
-      // מונע לחיצה אמיתית אם זה טאץ'
-      if(e.type === 'touchstart') e.preventDefault(); 
+      // במובייל: אנחנו לא מונעים את ה-touchstart כדי לאפשר "תפיסה" של הכפתור
+      // אם הם זריזים מספיק, הקליק יירשם והטקסט יתחלף.
     };
     
-    btn.addEventListener('mouseover', runAway);
-    btn.addEventListener('touchstart', runAway, {passive:false});
+    // בטלפון: הבריחה מתבצעת, אבל אנחנו משאירים סיכוי ללחוץ
+    btn.addEventListener('mouseover', runAway); 
+    btn.addEventListener('touchstart', runAway, {passive: true}); 
   }
 
-  // ניהול הלחיצות (הסיפור המרכזי)
+  // לוגיקת השלבים המלאה (1-8)
   btn.addEventListener('click', function(e){
     if (success) { openGift(); return; }
     if (loading) return;
 
-    // שלב 1: טעינה מזויפת
+    // --- שלב 1: טעינה (btn1_loading) ---
     if (tap === 0){
       tap = 1;
       loading = true;
@@ -2088,76 +2081,86 @@ function infinite(){
       sfx('confirm');
 
       let p = 0;
-      // הרצת האחוזים
       const int = setInterval(()=>{
-        p += Math.floor(Math.random()*10)+5; // קפיצות רנדומליות
+        p += Math.floor(Math.random()*12)+5;
         if(p>100) p=100;
         bar.style.width = p + '%';
         ipct.textContent = p + '%';
-        
         if(p === 100){
           clearInterval(int);
-          // סיום טעינה ומעבר אוטומטי לשלב הבא בלי לחיצה נוספת
-          setTimeout(()=>{
-            loading = false;
-            btn.click(); // לחיצה אוטומטית
-          }, 400);
+          setTimeout(()=>{ loading = false; btn.click(); }, 350);
         }
-      }, 150);
+      }, 120);
       return;
     }
 
-    tap++;
+    tap++; // מעבר לשלב הבא
 
-    // שלב 2: שגיאת מערכת מפחידה
+    // --- שלב 2: שגיאה והבהוב (btn2_error) ---
     if (tap === 2){
       ilabel.textContent = copy.btn2_error;
       btn.className = 'btn error-red';
       ipct.style.display = 'none';
       progWrap.style.display = 'none';
       
-      // הבהוב רקע אדום
+      // אפקט פלאש אדום ברקע
       const oldBg = document.body.style.background;
       document.body.style.transition = 'background 0.1s';
-      document.body.style.background = '#450a0a'; // אדום כהה
+      document.body.style.background = '#450a0a';
       inner.classList.add('shake');
       sfx('error');
       
       setTimeout(()=>{ 
         document.body.style.background = oldBg; 
         inner.classList.remove('shake');
-      }, 250);
+      }, 300);
       return;
     }
 
-    // שלב 3: התחלת ההטרלה (בריחה)
+    // --- שלב 3: הקפצה ראשונה (btn3_tease1) ---
     if (tap === 3){
-      resetBtn();
-      ilabel.textContent = copy.btn4_tease2;
-      btn.style.transform = `translate(40px, -20px)`; // קפיצה ראשונית
-      makeDodge(); // הפעלת מנגנון הבריחה
+      resetBtn(); // חזרה לצבע רגיל
+      ilabel.textContent = copy.btn3_tease1;
+      btn.style.transform = `translate(40px, -20px)`; // קפיצה קטנה
       sfx('whoosh');
       return;
     }
 
-    // שלב 4: עוד הטרלה (אם הצליחו ללחוץ)
+    // --- שלב 4: התחלת בריחה (btn4_tease2) ---
     if (tap === 4){
-      ilabel.textContent = copy.btn5_tease3;
-      const x = (Math.random() * 100) - 50;
-      btn.style.transform = `translate(${x}px, 30px)`;
+      ilabel.textContent = copy.btn4_tease2;
+      makeDodge(); // הפעלת מנגנון הבריחה מעכשיו והלאה
+      // בכל פעם שהם יצליחו ללחוץ מעכשיו, נעבור לטקסט הבא
       return;
     }
 
-    // שלב 5: הצלחה!
-    if (tap >= 5){
+    // --- שלב 5: (btn5_tease3) ---
+    if (tap === 5){
+      ilabel.textContent = copy.btn5_tease3;
+      return;
+    }
+
+    // --- שלב 6: (btn6_tease4) ---
+    if (tap === 6){
+      ilabel.textContent = copy.btn6_tease4;
+      return;
+    }
+
+    // --- שלב 7: (btn7_tease5) ---
+    if (tap === 7){
+      ilabel.textContent = copy.btn7_tease5;
+      return;
+    }
+
+    // --- שלב 8: הצלחה! (btn8_success) ---
+    if (tap >= 8){
       success = true;
-      // ביטול הבריחה
+      // יצירת כפתור חדש ונקי (בלי אירועי בריחה)
       const newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
       
-      newBtn.style.transform = 'translate(0,0)'; // איפוס מיקום
+      newBtn.style.transform = 'translate(0,0)';
       
-      // שינוי המסך להצלחה
       inner.innerHTML = `
         <div class="inf-success-icon" aria-hidden="true" style="margin:0 auto 16px">💝</div>
         <h1 style="font-size:24px; margin-bottom:8px">${copy.earned}</h1>
@@ -2165,12 +2168,10 @@ function infinite(){
         <canvas id="confetti-final" class="confetti-canvas"></canvas>
       `;
       
-      // הפעלת קונפטי
       canvas = inner.querySelector('#confetti-final');
       boom();
       sfx('tada');
 
-      // לחיצה על הכפתור הסופי
       document.getElementById('ibtn-final').addEventListener('click', openGift);
     }
   });

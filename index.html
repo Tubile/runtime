@@ -1960,215 +1960,220 @@ else { document.body.className = ''; }
 function infinite(){
   const app = document.getElementById('app');
 
-  // Read params
-  const NAME = getCopy('name', 'Friend');
-  const GIFT = normalizeUrl(qs.get('giftUrl'), 'https://example.com');
-  const ACCENT = (qs.get('accent') || 'dark').toLowerCase();
-// ✅ קריאת theme מה-URL
-const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
-const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
-const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
-// ✅ החלת ה-theme על ה-body (זה חדש!)
-if (activeTheme !== 'dark') {
-  document.body.className = 'theme-' + activeTheme;
-} else {
-  document.body.className = '';
-}
-  const titleOverride = qs.get('title');
+  // קריאת פרמטרים והגדרות בסיס
+  const qs = new URLSearchParams(location.search);
+  const NAME = (qs.get('name')||'Friend').trim();
+  const GIFT = qs.get('giftUrl'); // URL רגיל, יטופל בפתיחה
+  
+  // הגדרת Theme
+  const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
+  const validThemes = ['dark', 'light', 'romantic', 'luxury', 'neon'];
+  const activeTheme = validThemes.includes(THEME) ? THEME : 'dark';
+  if (activeTheme !== 'dark') { document.body.className = 'theme-' + activeTheme; } 
+  else { document.body.className = ''; }
 
+  const titleOverride = qs.get('title');
   const copy = {
     title: titleOverride ? titleOverride : `${NAME}, you've got a sweet surprise! 💖`,
-    subtitle: getCopy('subtitle', 'Click the button to get your gift'),
-    btn1_loading: getCopy('btn1_loading', 'Loading... hold on'),
-    btn2_error: getCopy('btn2_error', 'Oops! Try again'),
-    btn3_tease1: getCopy('btn3_tease1', 'Error! Click again'),
-    btn4_tease2: getCopy('btn4_tease2', 'Try to click harder'),
-    btn5_tease3: getCopy('btn5_tease3', 'You love being trolled?'),
-    btn6_tease4: getCopy('btn6_tease4', 'Admit it, this is fun 😈'),
-    btn7_tease5: getCopy('btn7_tease5', 'Almost there... or not? 🤭'),
-    btn8_success: getCopy('btn8_success', 'Claim your real gift'),
-    earned: getCopy('earned', 'You earned it 🤣')
+    subtitle: (qs.get('subtitle') || 'Click the button to get your gift').slice(0,80),
+    btn1_loading: (qs.get('btn1_loading') || 'Loading... hold on').slice(0,40),
+    btn2_error: (qs.get('btn2_error') || 'System Error 304').slice(0,40), // שגיאה טכנית יותר
+    btn3_tease1: (qs.get('btn3_tease1') || 'Whoops! Missed it').slice(0,40),
+    btn4_tease2: (qs.get('btn4_tease2') || 'Catch me if you can! 😈').slice(0,40),
+    btn5_tease3: (qs.get('btn5_tease3') || 'Too slow! 😂').slice(0,40),
+    btn8_success: (qs.get('btn8_success') || 'Claim your real gift').slice(0,40),
+    earned: (qs.get('earned') || 'Okay, you earned it 🤣').slice(0,80)
   };
 
-  // Inner block
+  // בניית המסך (HTML)
   const inner = document.createElement('div');
-  inner.className = 'wrap wrap-infinite' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : ''); + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '');
-inner.innerHTML = `
+  inner.className = 'wrap wrap-infinite' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '');
+  inner.innerHTML = `
     <div class="inf-icon" aria-hidden="true">🎁</div>
     <h1>${copy.title}</h1>
     <p class="sub">${copy.subtitle}</p>
 
-    <button id="ibtn" class="btn brand">
-      <span id="ilabel" class="label">${getCopy('btn0_start','Claim your gift')}</span>
-      <span id="ipct" class="percent" style="display:none">0%</span>
-    </button>
+    <div style="min-height:80px; display:flex; align-items:center; justify-content:center; position:relative; width:100%;">
+      <button id="ibtn" class="btn brand" style="transition: transform 0.1s ease;">
+        <span id="ilabel" class="label">${(qs.get('btn0_start') || 'Claim your gift').slice(0,40)}</span>
+        <span id="ipct" class="percent" style="display:none">0%</span>
+      </button>
+    </div>
 
     <div id="iprogress" class="progress" aria-hidden="true" style="display:none">
       <div class="progress__bar" id="ibar"></div>
     </div>
-
-    <div id="earned" class="earned" style="display:none">${copy.earned}</div>
+    
     <canvas id="confetti" class="confetti-canvas"></canvas>
   `;
   app.replaceChildren(inner);
   document.getElementById('app').classList.remove('card');
 
-  // Refs
+  // משתנים ושמירת אלמנטים
   const btn = document.getElementById('ibtn');
   const ilabel = document.getElementById('ilabel');
   const ipct = document.getElementById('ipct');
   const bar = document.getElementById('ibar');
   const progWrap = document.getElementById('iprogress');
-  const earned = document.getElementById('earned');
-  const confettiCanvas = document.getElementById('confetti');
+  let canvas = document.getElementById('confetti');
 
-  // helpers for fun states
-  function resetBtnColors(){
-    btn.classList.remove('error-red','brand','green','purple','sky','success','alt1','alt2');
-  }
-  function resetFx(){
-    inner.classList.remove('shake','fx-alert','fx-calm','fx-blue','fx-pink');
-  }
-
-  // state
+  // משתני מצב (State)
   let tap = 0;
   let loading = false;
   let success = false;
-  btn.disabled = false;
-  let interval = null;
 
-  function startLoading(){
-    loading = true;
-    btn.disabled = true;
-    sfx('confirm');
-
-    progWrap.style.display = 'block';
-    ipct.style.display = 'inline';
-    ipct.textContent = '0%';
-    bar.style.width = '0%';
-
-    let p = 0;
-    interval = setInterval(()=>{
-      p = Math.min(100, p + Math.floor(Math.random()*7)+2);
-      bar.style.width = p + '%';
-      ipct.textContent = p + '%';
-
-      if (p >= 100){
-        clearInterval(interval);
-        setTimeout(()=>{
-  ipct.style.display = 'none';
-  btn.disabled = false;
-  loading = false;
-  // מעבר אוטומטי לשלב הבא (Oops) בלי קליק נוסף
-  if (tap === 1) { btn.click(); }
-}, 300);
-      }
-    }, 120);
+  // פונקציות עזר
+  function sfx(k){ try{ window.sfx(k); }catch(_){} }
+  
+  function openGift(){ 
+    if(GIFT) try { window.open(GIFT, '_blank', 'noopener'); } catch(e) {}
   }
-
-  function openGift(){
-    try { window.open(GIFT, '_blank', 'noopener'); } catch(e) {}
+  
+  function resetBtn(){ 
+    btn.className = 'btn brand'; 
+    inner.classList.remove('shake'); 
   }
-
-  btn.addEventListener('click', function(){
-    if (success) { openGift(); return; }
-
-    if (tap === 0){
-      ilabel.textContent = copy.btn1_loading;
-      if (!interval) startLoading();
-      tap = 1;
-      return;
-    }
-    if (loading) return;
-
-    tap++;
-
-    switch (tap) {
-      case 2: {
-        ilabel.textContent = copy.btn2_error;
-        resetBtnColors(); btn.classList.add('error-red'); sfx('error');
-        inner.classList.add('shake'); setTimeout(()=> inner.classList.remove('shake'), 300);
-        break;
-      }
-      case 3: {
-  ilabel.textContent = copy.btn3_tease1;
-  resetBtnColors(); btn.classList.add('error-red'); resetFx();
-  inner.classList.add('shake'); setTimeout(()=> inner.classList.remove('shake'), 300);
-  break;
-}
-      case 4: {
-  ilabel.textContent = copy.btn4_tease2;
-  resetBtnColors(); btn.classList.add('brand'); resetFx();
-  sfx('whoosh');
-  break;
-}
-      case 5: {
-  ilabel.textContent = copy.btn5_tease3;
-  resetBtnColors(); btn.classList.add('brand'); resetFx();
-  break;
-}
-      case 6: {
-  ilabel.textContent = copy.btn6_tease4;
-  resetBtnColors(); btn.classList.add('brand'); resetFx();
-  sfx('whoosh');
-  break;
-}
-      case 7: {
-  ilabel.textContent = copy.btn7_tease5;
-  resetBtnColors(); btn.classList.add('brand'); resetFx();
-  break;
-}
-      case 8: {
-    // מסך הצלחה עם אייקון
-    inner.innerHTML = `
-      <div class="inf-success-icon" aria-hidden="true">💝</div>
-      <h1 style="font-size:22px;margin:12px 0 8px">${copy.earned}</h1>
-      <button id="ibtn-final" class="btn green">${copy.btn8_success}</button>
-      <canvas id="confetti" class="confetti-canvas"></canvas>
-    `;
-        
-        confettiBurst(inner.querySelector('#confetti'));
-        sfx('tada');
-        success = true;
-        
-        // חיבור מחדש לכפתור הסופי
-        inner.querySelector('#ibtn-final').addEventListener('click', ()=> openGift());
-        break;
-      }
-      default: {
-        openGift();
-      }
-    }
-  }, false);
-
-  // Canvas confetti (modern "poof")
-  function confettiBurst(canvas){
+  
+  // מנוע קונפטי פשוט
+  function boom(){
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const r = window.devicePixelRatio || 1;
     function size(){ canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; ctx.setTransform(r,0,0,r,0,0); }
-    if (!canvas.__sized){ canvas.__sized = true; canvas.style.display='block'; size(); window.addEventListener('resize', size); }
+    canvas.style.display='block'; size();
     const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
     const pieces = [];
-    const w = canvas.clientWidth, h = canvas.clientHeight;
     for(let i=0;i<120;i++){
-      pieces.push({ x:w/2, y:h/2, vx:(Math.random()*4-2), vy:(Math.random()*-3-2),
-        r:Math.random()*6+3, c:colors[(Math.random()*colors.length)|0], a:1, spin:(Math.random()*6.28), vr:(Math.random()*0.2-0.1) });
+      pieces.push({x:canvas.width/2/r, y:canvas.height/2/r, vx:(Math.random()*4-2), vy:(Math.random()*-3-2), r:Math.random()*6+3, c:colors[Math.floor(Math.random()*colors.length)], a:1});
     }
-    const g = 0.05; let t=0;
     (function step(){
-      ctx.clearRect(0,0,w,h);
-      pieces.forEach(p=>{
-        p.vy += g; p.x += p.vx; p.y += p.vy; p.spin += p.vr; p.a -= 0.008;
-        ctx.globalAlpha = Math.max(p.a,0);
-        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin);
-        ctx.fillStyle = p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r);
-        ctx.restore();
-      });
-      ctx.globalAlpha = 1;
-      if(t++<260) requestAnimationFrame(step); else ctx.clearRect(0,0,w,h);
+      ctx.clearRect(0,0,canvas.width/r,canvas.height/r);
+      pieces.forEach(p=>{ p.vy+=0.05; p.x+=p.vx; p.y+=p.vy; p.a-=0.008; ctx.globalAlpha=Math.max(p.a,0); ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,p.r,p.r); });
+      ctx.globalAlpha=1;
+      if(pieces.some(p=>p.a>0)) requestAnimationFrame(step); else canvas.style.display='none';
     })();
   }
+
+  // לוגיקת "בריחה" של הכפתור
+  function makeDodge(){
+    // הבריחה קורית גם במעבר עכבר וגם בנגיעה במסך
+    const runAway = function(e){
+      if(success) return;
+      // חישוב כיוון רנדומלי
+      const x = (Math.random() * 160) - 80; // זוז שמאלה/ימינה
+      const y = (Math.random() * 100) - 50; // זוז למעלה/למטה
+      btn.style.transform = `translate(${x}px, ${y}px) rotate(${Math.random()*10-5}deg)`;
+      sfx('whoosh');
+      
+      // מונע לחיצה אמיתית אם זה טאץ'
+      if(e.type === 'touchstart') e.preventDefault(); 
+    };
+    
+    btn.addEventListener('mouseover', runAway);
+    btn.addEventListener('touchstart', runAway, {passive:false});
+  }
+
+  // ניהול הלחיצות (הסיפור המרכזי)
+  btn.addEventListener('click', function(e){
+    if (success) { openGift(); return; }
+    if (loading) return;
+
+    // שלב 1: טעינה מזויפת
+    if (tap === 0){
+      tap = 1;
+      loading = true;
+      ilabel.textContent = copy.btn1_loading;
+      progWrap.style.display = 'block';
+      ipct.style.display = 'inline';
+      sfx('confirm');
+
+      let p = 0;
+      // הרצת האחוזים
+      const int = setInterval(()=>{
+        p += Math.floor(Math.random()*10)+5; // קפיצות רנדומליות
+        if(p>100) p=100;
+        bar.style.width = p + '%';
+        ipct.textContent = p + '%';
+        
+        if(p === 100){
+          clearInterval(int);
+          // סיום טעינה ומעבר אוטומטי לשלב הבא בלי לחיצה נוספת
+          setTimeout(()=>{
+            loading = false;
+            btn.click(); // לחיצה אוטומטית
+          }, 400);
+        }
+      }, 150);
+      return;
+    }
+
+    tap++;
+
+    // שלב 2: שגיאת מערכת מפחידה
+    if (tap === 2){
+      ilabel.textContent = copy.btn2_error;
+      btn.className = 'btn error-red';
+      ipct.style.display = 'none';
+      progWrap.style.display = 'none';
+      
+      // הבהוב רקע אדום
+      const oldBg = document.body.style.background;
+      document.body.style.transition = 'background 0.1s';
+      document.body.style.background = '#450a0a'; // אדום כהה
+      inner.classList.add('shake');
+      sfx('error');
+      
+      setTimeout(()=>{ 
+        document.body.style.background = oldBg; 
+        inner.classList.remove('shake');
+      }, 250);
+      return;
+    }
+
+    // שלב 3: התחלת ההטרלה (בריחה)
+    if (tap === 3){
+      resetBtn();
+      ilabel.textContent = copy.btn4_tease2;
+      btn.style.transform = `translate(40px, -20px)`; // קפיצה ראשונית
+      makeDodge(); // הפעלת מנגנון הבריחה
+      sfx('whoosh');
+      return;
+    }
+
+    // שלב 4: עוד הטרלה (אם הצליחו ללחוץ)
+    if (tap === 4){
+      ilabel.textContent = copy.btn5_tease3;
+      const x = (Math.random() * 100) - 50;
+      btn.style.transform = `translate(${x}px, 30px)`;
+      return;
+    }
+
+    // שלב 5: הצלחה!
+    if (tap >= 5){
+      success = true;
+      // ביטול הבריחה
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      
+      newBtn.style.transform = 'translate(0,0)'; // איפוס מיקום
+      
+      // שינוי המסך להצלחה
+      inner.innerHTML = `
+        <div class="inf-success-icon" aria-hidden="true" style="margin:0 auto 16px">💝</div>
+        <h1 style="font-size:24px; margin-bottom:8px">${copy.earned}</h1>
+        <button id="ibtn-final" class="btn green">${copy.btn8_success}</button>
+        <canvas id="confetti-final" class="confetti-canvas"></canvas>
+      `;
+      
+      // הפעלת קונפטי
+      canvas = inner.querySelector('#confetti-final');
+      boom();
+      sfx('tada');
+
+      // לחיצה על הכפתור הסופי
+      document.getElementById('ibtn-final').addEventListener('click', openGift);
+    }
+  });
 }
 // ===== Narcissist Questions =====
 function narcissistQ(){

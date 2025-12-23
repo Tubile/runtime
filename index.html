@@ -93,6 +93,22 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
   }
   .wrap.scrolling .custom-scrollbar .thumb{ opacity:.9; }  /* מודגש בזמן גלילה */
 }
+/* --- REACTION CAM STYLES --- */
+.react-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; }
+.react-video-container { flex: 1; position: relative; overflow: hidden; background: #000; display:flex; align-items:center; justify-content:center; }
+.react-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); } /* Mirror effect */
+.react-controls { padding: 24px; background: #0f152a; border-top: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 16px; align-items: center; text-align: center; }
+.react-btn-record { width: 72px; height: 72px; border-radius: 50%; border: 4px solid #fff; background: #ef4444; cursor: pointer; transition: transform 0.2s; position: relative; }
+.react-btn-record.recording { animation: pulseRec 1.5s infinite; background: transparent; border-color: #ef4444; }
+.react-btn-record.recording::after { content:''; position:absolute; inset:12px; background:#ef4444; border-radius:8px; }
+@keyframes pulseRec { 0%{box-shadow: 0 0 0 0 rgba(239,68,68, 0.4);} 70%{box-shadow: 0 0 0 20px rgba(239,68,68, 0);} 100%{box-shadow: 0 0 0 0 rgba(239,68,68, 0);} }
+.react-timer { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(239,68,68,0.9); padding: 4px 12px; border-radius: 99px; font-weight: bold; font-size: 14px; color: #fff; display:none; }
+.react-title { font-size: 20px; font-weight: 800; margin: 0 0 4px 0; color: #fff; }
+.react-sub { font-size: 14px; color: #9aa3b2; margin: 0 0 12px 0; max-width: 280px; line-height: 1.4; }
+.react-btn-main { width: 100%; background: #10b981; color: #fff; font-weight: bold; padding: 16px; border-radius: 12px; border: none; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.react-btn-sec { background: transparent; color: #64748b; border: none; padding: 12px; font-size: 14px; text-decoration: underline; }
+.react-btn-share { background: #25D366; color: #fff; } /* WhatsApp Green */
+.hidden { display: none !important; }
 </style>
 
 <!-- Infinite UX extra classes -->
@@ -1226,6 +1242,164 @@ const F = (qs.get('f')||'').trim(); // feature slug
 const NAME = (qs.get('name')||'Friend').trim();
 const GIFT = normalizeUrl(qs.get('giftUrl'));
 const PREV = (qs.get('preview')||'0').trim()==='1';
+/* --- REACTION CAM LOGIC --- */
+const REACTION_ON = (qs.get('reaction') || '0') === '1';
+const SENDER = (qs.get('sender') || '').trim(); // שם השולח (או ריק)
+
+// פונקציה ראשית שנקראת בסוף כל מתיחה
+function tryReactionFlow(fallbackUrl) {
+  // 1. אם הפיצ'ר כבוי או שזו תצוגה מקדימה -> לך ישר למתנה
+  if (!REACTION_ON || PREV) {
+    if(fallbackUrl) window.location.href = fallbackUrl;
+    return;
+  }
+
+  // 2. בנה את הטקסטים (אישי או גנרי)
+  const senderText = SENDER ? SENDER : "The sender";
+  
+  // 3. הזרק את ה-HTML של המצלמה
+  const div = document.createElement('div');
+  div.className = 'react-overlay';
+  div.innerHTML = `
+    <div class="react-video-container">
+      <video id="rvVideo" class="react-video" autoplay playsinline muted></video>
+      <div id="rvTimer" class="react-timer">00:00</div>
+    </div>
+    
+    <div id="stepHook" class="react-controls">
+      <div>
+        <h2 class="react-title">Wait! One last thing...</h2>
+        <p class="react-sub">${senderText} is dying to see your reaction! 🤣<br>Record a quick video to unlock the gift.</p>
+      </div>
+      <button id="btnStartCam" class="react-btn-main">📹 Record Reaction (5s)</button>
+      <button id="btnSkip1" class="react-btn-sec">I'm boring, skip to gift</button>
+    </div>
+
+    <div id="stepRec" class="react-controls hidden">
+      <div class="react-title">Recording...</div>
+      <button id="btnRecordToggle" class="react-btn-record"></button>
+      <p class="react-sub">Tap to stop (Max 10s)</p>
+    </div>
+
+    <div id="stepShare" class="react-controls hidden">
+      <h2 class="react-title">That was epic! 😂</h2>
+      <p class="react-sub">Share it to unlock your gift immediately.</p>
+      <button id="btnShare" class="react-btn-main react-btn-share">📤 Share on WhatsApp & Unlock</button>
+      <div style="display:flex; gap:10px; width:100%">
+        <button id="btnRetake" class="react-btn-sec" style="flex:1; text-decoration:none; border:1px solid #334155; border-radius:8px">↻ Retake</button>
+        <button id="btnSkip2" class="react-btn-sec" style="flex:1">Skip</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(div);
+
+  // משתנים למצלמה
+  const video = document.getElementById('rvVideo');
+  const timer = document.getElementById('rvTimer');
+  let mediaRecorder;
+  let recordedChunks = [];
+  let stream;
+  let startTime;
+  let timerInt;
+
+  // פונקציית דילוג (הולך למתנה)
+  const goGift = () => { window.location.href = fallbackUrl; };
+  document.getElementById('btnSkip1').onclick = goGift;
+  document.getElementById('btnSkip2').onclick = goGift;
+
+  // התחלת המצלמה
+  document.getElementById('btnStartCam').onclick = async () => {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
+      video.srcObject = stream;
+      document.getElementById('stepHook').classList.add('hidden');
+      document.getElementById('stepRec').classList.remove('hidden');
+      
+      // התחלה אוטומטית אחרי שנייה
+      setTimeout(startRecording, 500);
+    } catch (e) {
+      alert("Camera access denied. Skipping to gift.");
+      goGift();
+    }
+  };
+
+  const startRecording = () => {
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    
+    mediaRecorder.onstop = () => {
+      clearInterval(timerInt);
+      timer.style.display = 'none';
+      
+      const blob = new Blob(recordedChunks, { type: "video/mp4" });
+      const videoURL = URL.createObjectURL(blob);
+      video.srcObject = null;
+      video.src = videoURL;
+      video.loop = true;
+      video.play();
+      
+      document.getElementById('stepRec').classList.add('hidden');
+      document.getElementById('stepShare').classList.remove('hidden');
+      document.getElementById('btnRecordToggle').classList.remove('recording');
+
+      // לוגיקת שיתוף
+      document.getElementById('btnShare').onclick = async () => {
+        const file = new File([blob], "reaction.mp4", { type: "video/mp4" });
+        // שינוי כפתור ל"מתנה נפתחה" כדי שכשחוזרים יהיה ברור
+        const btn = document.getElementById('btnShare');
+        btn.textContent = "🔓 Gift Unlocked! Click here";
+        btn.onclick = goGift; // לחיצה שנייה לוקחת למתנה
+        
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'My Reaction!',
+              text: 'Check out my reaction 😂'
+            });
+            // אם השיתוף הצליח או שהמשתמש חזר - אפשר לעשות רידיירקט
+             setTimeout(goGift, 1000); 
+          } catch (err) {
+             // אם ביטל שיתוף או שגיאה
+             goGift(); 
+          }
+        } else {
+          alert("Video saved! Sending you to gift...");
+          goGift();
+        }
+      };
+    };
+
+    mediaRecorder.start();
+    document.getElementById('btnRecordToggle').classList.add('recording');
+    timer.style.display = 'block';
+    startTime = Date.now();
+    
+    timerInt = setInterval(() => {
+      const sec = Math.floor((Date.now() - startTime) / 1000);
+      timer.textContent = "00:0" + sec;
+      if (sec >= 10) stopRecording();
+    }, 1000);
+    
+    // לחיצה לעצירה
+    document.getElementById('btnRecordToggle').onclick = stopRecording;
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    if (stream) stream.getTracks().forEach(t => t.stop());
+  };
+  
+  // צילום מחדש
+  document.getElementById('btnRetake').onclick = () => {
+    document.getElementById('stepShare').classList.add('hidden');
+    document.querySelector('.react-overlay').remove(); // נקה הכל
+    tryReactionFlow(fallbackUrl); // התחל מחדש
+  };
+}
+/* --- END REACTION CAM LOGIC --- */
 function getCopy(key, fallback) {
   const v = qs.get(key);
   if (!v || v.trim().length === 0) return fallback;
@@ -1991,7 +2165,7 @@ function captcha(){
     btn.addEventListener('click', ()=>{
       if(PREV) return;
       sfx('confirm');
-      if(GIFT) try{ window.open(GIFT, '_blank', 'noopener'); }catch(e){}
+      tryReactionFlow(GIFT);
     });
   }
 
@@ -2239,7 +2413,7 @@ function infinite(){
       canvas = inner.querySelector('#confetti-final');
       boom();
       sfx('tada');
-      document.getElementById('ibtn-final').addEventListener('click', openGift);
+      document.getElementById('ibtn-final').addEventListener('click', function(){ tryReactionFlow(GIFT); });
     }
   });
 }
@@ -2529,7 +2703,7 @@ else { document.body.className = ''; }
     btn?.addEventListener('click', ()=>{
       if(PREV) return;
       try{sfx('confirm')}catch(_){}
-      try{ window.open(GIFT, '_blank', 'noopener'); }catch(_){}
+      tryReactionFlow(GIFT);
     });
   }
 
@@ -2817,7 +2991,7 @@ function shake(){
     document.getElementById('shOpen')?.addEventListener('click', ()=>{
       if(PREV) return;
       sfx('confirm');
-      try{ window.open(GIFT, '_blank', 'noopener'); }catch(_){}
+      tryReactionFlow(GIFT);
     });
   }
 
@@ -3169,7 +3343,7 @@ var copy = {
     b && b.addEventListener('click', function(){
       if(PREV) return;
       play('confirm');
-      try{ window.open(GIFT,'_blank','noopener'); }catch(e){}
+      tryReactionFlow(GIFT);
     });
   }
 

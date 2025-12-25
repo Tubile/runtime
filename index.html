@@ -2452,7 +2452,7 @@ function shake(){
     clearInterval(trollInterval);
 
     // לוגיקה חדשה: ספירה לאחור רק בפעם הראשונה
-    const showCountdown = (attempt === 1);
+    const showCountdown = (attempt <= 2);
     
     // כותרת משתנה: בהתחלה ספירה, אחר כך הוראה
     let titleText = copy.countTitle;

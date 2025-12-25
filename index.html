@@ -2679,10 +2679,29 @@ var copy = {
       '.toast h3{margin:0 0 6px 0}',
       '.confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:999;display:block}',
       '@keyframes infShake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}',
-      '.shake{animation:infShake .35s linear 1}',
-      .wrap-shake.theme-romantic .sh-emoji{ filter:hue-rotate(320deg) saturate(1.4) brightness(1.1) }
-      .wrap-shake.theme-luxury .sh-emoji{ filter:hue-rotate(30deg) saturate(1.5) brightness(1.2) sepia(0.25) }
-      .wrap-shake.theme-neon .sh-emoji{ filter:hue-rotate(180deg) saturate(1.6) brightness(1.25) }
+      .shake{animation:infShake .35s linear 1}
+
+      /* === Theme Specific Phone Styles === */
+      /* Romantic: Deep Plum/Pink Gradient + Pink Glow */
+      .theme-romantic .sh-phone {
+        background: linear-gradient(180deg, #4a1d46, #2d1b3d);
+        border-color: rgba(236,72,153,.3);
+        box-shadow: inset 0 0 0 1px rgba(236,72,153,.1), 0 20px 40px rgba(0,0,0,.4);
+      }
+      
+      /* Neon: Dark Cyber-Violet + Cyan Glow */
+      .theme-neon .sh-phone {
+        background: linear-gradient(180deg, #1a0033, #0a0015);
+        border-color: rgba(34,211,238,.5);
+        box-shadow: inset 0 0 0 1px rgba(34,211,238,.2), 0 0 30px rgba(34,211,238,.2);
+      }
+      
+      /* Luxury: Matte Black/Dark Brown + Gold Border */
+      .theme-luxury .sh-phone {
+        background: linear-gradient(180deg, #1c1917, #0a0a0a);
+        border-color: rgba(251,191,36,.4);
+        box-shadow: inset 0 0 0 1px rgba(251,191,36,.1), 0 20px 40px rgba(0,0,0,.5);
+      }
       
       /* נגישות: פחות תנועה למעדיפים */
       '@media (prefers-reduced-motion:reduce){.bv-gust span,.bv-ring .fg{transition:none;animation:none}}'

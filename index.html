@@ -2352,6 +2352,28 @@ function shake(){
       .wobble{ animation:wobble .9s ease-in-out infinite }
       .confetti-canvas{ position:fixed; inset:0; pointer-events:none; z-index:999; display:none }
       .shake{ animation:infShake .35s linear 1 }
+      
+      /* === Theme Specific Phone Styles (Cosmetic Fixes) === */
+      /* Romantic: Deep Plum/Pink Gradient + Pink Glow */
+      .theme-romantic .sh-phone {
+        background: linear-gradient(180deg, #4a1d46, #2d1b3d);
+        border-color: rgba(236,72,153,.3);
+        box-shadow: inset 0 0 0 1px rgba(236,72,153,.1), 0 20px 40px rgba(0,0,0,.4);
+      }
+      
+      /* Neon: Dark Cyber-Violet + Cyan Glow */
+      .theme-neon .sh-phone {
+        background: linear-gradient(180deg, #1a0033, #0a0015);
+        border-color: rgba(34,211,238,.5);
+        box-shadow: inset 0 0 0 1px rgba(34,211,238,.2), 0 0 30px rgba(34,211,238,.2);
+      }
+      
+      /* Luxury: Matte Black/Dark Brown + Gold Border */
+      .theme-luxury .sh-phone {
+        background: linear-gradient(180deg, #1c1917, #0a0a0a);
+        border-color: rgba(251,191,36,.4);
+        box-shadow: inset 0 0 0 1px rgba(251,191,36,.1), 0 20px 40px rgba(0,0,0,.5);
+      }
     `;
     const st = document.createElement('style'); st.id='shake-ux'; st.textContent=css;
     (document.head || document.documentElement).appendChild(st);

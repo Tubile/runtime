@@ -1293,42 +1293,42 @@ function tryReactionFlow(fallbackUrl) {
   const div = document.createElement('div');
   div.className = 'react-overlay';
   div.innerHTML = `
-      <div class="wrap" style="padding-top:10px;">
-        <div style="font-size:42px; margin-bottom:10px;">📸</div>
-        
-        <h1 class="bv-title" style="font-size:24px; margin-bottom:20px; line-height:1.3;">
-          Send <span style="color:#60a5fa;">${senderName}</span> a quick<br>5-10s reaction?
-        </h1>
-
-        <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:20px; margin-bottom:24px; text-align:left;">
-          
-          <div style="display:flex; align-items:start; gap:12px; margin-bottom:14px;">
-            <span style="font-size:18px; line-height:1.4;">🎥</span>
-            <span style="font-size:15px; opacity:0.9; line-height:1.4;"><b>Record</b> your genuine reaction (5-10s)</span>
-          </div>
-
-          <div style="display:flex; align-items:start; gap:12px; margin-bottom:14px;">
-            <span style="font-size:18px; line-height:1.4;">🚀</span>
-            <span style="font-size:15px; opacity:0.9; line-height:1.4;"><b>Send</b> to ${senderName} in one click</span>
-          </div>
-
-          <div style="display:flex; align-items:start; gap:12px;">
-            <span style="font-size:18px; line-height:1.4;">🏆</span>
-            <span style="font-size:15px; opacity:0.9; line-height:1.4;"><b>Show</b> them they got you good!</span>
-          </div>
-
-        </div>
-        
-        <button id="btn-share" class="btn brand" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; height:auto; min-height:68px; padding:12px 20px; width:100%;">
-          <span style="font-size:17px; line-height:1.2; font-weight:700;">Share reaction to ${senderName} 💬</span>
-          <span style="font-size:12px; opacity:0.85; font-weight:400;">And unlock the real gift immediately 🎁</span>
-        </button>
-
-        <div id="btn-skip" class="bv-sub" style="margin-top:20px; text-decoration:underline; cursor:pointer; font-size:13px; opacity:0.6;">
-          Skip and open gift
-        </div>
+    <div id="videoContainer" class="react-video-container hidden">
+      <video id="rvVideo" class="react-video" autoplay playsinline muted></video>
+      <div id="rvTimer" class="react-timer">00:00</div>
+    </div>
+    
+    <div id="stepHook" class="react-card">
+      <div class="react-icon-bounce">📸</div>
+      <div>
+        <h2 class="react-title">Wait! One last thing</h2>
+        <p class="react-sub" style="margin-top:8px">
+          <strong style="color:#fff">${senderText}</strong> is dying to see your reaction! 🤣
+        </p>
+        <p class="react-sub" style="font-size:14px; margin-top:4px">Record a quick video to unlock the gift.</p>
       </div>
-    `;
+      <button id="btnStartCam" class="react-btn-main">
+        <span>Record Reaction</span>
+      </button>
+      <button id="btnSkip1" class="react-btn-sec">I'm boring, skip to gift</button>
+    </div>
+
+    <div id="stepRec" class="react-controls-overlay hidden">
+      <div class="react-title" style="text-shadow:0 2px 4px rgba(0,0,0,0.5)">Recording...</div>
+      <button id="btnRecordToggle" class="react-btn-record"></button>
+      <p class="react-sub" style="color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.8)">Tap to stop (Max 10s)</p>
+    </div>
+
+    <div id="stepShare" class="react-controls-overlay hidden">
+      <h2 class="react-title">That was epic! 😂</h2>
+      <p class="react-sub" style="color:#e2e8f0">Share it to unlock your gift immediately.</p>
+      <button id="btnShare" class="react-btn-main react-btn-share">📤 Share on WhatsApp & Unlock</button>
+      <div style="display:flex; gap:12px; width:100%">
+        <button id="btnRetake" class="react-btn-sec" style="flex:1; color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:12px">↻ Retake</button>
+        <button id="btnSkip2" class="react-btn-sec" style="flex:1; color:#cbd5e1">Skip</button>
+      </div>
+    </div>
+  `;
   document.body.appendChild(div);
 
   // --- לוגיקה (אותה לוגיקה בדיוק, רק התאמה ל-Classes החדשים) ---
@@ -1752,9 +1752,7 @@ function captcha(){
     canvas.style.display='block'; size();
     const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
     const pieces = [];
-    for(let i=0;i<120;i++){
-      pieces.push({ x:canvas.width/2/r, y:canvas.height/2/r, vx:(Math.random()*4-2), vy:(Math.random()*-3-2), r:Math.random()*6+3, c:colors[(Math.random()*colors.length)|0], a:1 });
-    }
+    for(let i=0;i<120;i++){ pieces.push({x:canvas.width/2/r, y:canvas.height/2/r, vx:(Math.random()*4-2), vy:(Math.random()*-3-2), r:Math.random()*6+3, c:colors[Math.floor(Math.random()*colors.length)], a:1}); }
     (function step(){
       ctx.clearRect(0,0,canvas.width/r,canvas.height/r);
       pieces.forEach(p=>{ p.vy+=0.05; p.x+=p.vx; p.y+=p.vy; p.a-=0.008; ctx.globalAlpha=Math.max(p.a,0); ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,p.r,p.r); });
@@ -2172,32 +2170,35 @@ else { document.body.className = ''; }
   }
 
   function confettiBurst(){
-    // Canvas confetti (like in other features)
+    // יצירת קנבס דינמית (נשמר מהמקור)
     const canvas = document.createElement('canvas');
     canvas.className = 'nq-confetti';
     document.body.appendChild(canvas);
+    
+    // לוגיקה של SHAKE
     const ctx = canvas.getContext('2d');
     const r = window.devicePixelRatio||1;
     function size(){ canvas.width = innerWidth*r; canvas.height = innerHeight*r; ctx.setTransform(r,0,0,r,0,0); }
     size(); const onR=()=>size(); window.addEventListener('resize', onR, { once:true });
-    const colors=['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
-    const pieces=[]; const w=innerWidth, h=innerHeight;
-    for(let i=0;i<140;i++){
-      pieces.push({ x:w/2, y:h/2, vx:(Math.random()*4-2), vy:(Math.random()*-3-2),
-        r:Math.random()*6+3, c:colors[(Math.random()*colors.length)|0], a:1, spin:(Math.random()*6.28), vr:(Math.random()*0.2-0.1) });
+    
+    const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
+    const pieces = [];
+    const w=innerWidth, h=innerHeight;
+    
+    for(let i=0;i<120;i++){
+      pieces.push({ x:w/2, y:h/2, vx:(Math.random()*4-2), vy:(Math.random()*-3-2), r:Math.random()*6+3, c:colors[Math.floor(Math.random()*colors.length)], a:1 });
     }
-    const g=0.05; let t=0;
+    
     (function step(){
       ctx.clearRect(0,0,w,h);
       pieces.forEach(p=>{
-        p.vy+=g; p.x+=p.vx; p.y+=p.vy; p.spin+=p.vr; p.a-=0.008;
-        ctx.globalAlpha=Math.max(p.a,0);
-        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin);
-        ctx.fillStyle=p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r);
-        ctx.restore();
+        p.vy+=0.05; p.x+=p.vx; p.y+=p.vy; p.a-=0.008; 
+        ctx.globalAlpha=Math.max(p.a,0); 
+        ctx.fillStyle=p.c; 
+        ctx.fillRect(p.x,p.y,p.r,p.r); // ריבועים פשוטים כמו ב-Shake
       });
       ctx.globalAlpha=1;
-      if(t++<260) requestAnimationFrame(step); else { ctx.clearRect(0,0,w,h); canvas.remove(); }
+      if(pieces.some(p=>p.a>0)) requestAnimationFrame(step); else canvas.remove();
     })();
   }
 
@@ -2452,7 +2453,7 @@ function shake(){
     clearInterval(trollInterval);
 
     // לוגיקה חדשה: ספירה לאחור רק בפעם הראשונה
-    const showCountdown = (attempt === 1);
+    const showCountdown = (attempt <= 2);
     
     // כותרת משתנה: בהתחלה ספירה, אחר כך הוראה
     let titleText = copy.countTitle;
@@ -2715,19 +2716,19 @@ var copy = {
   // קונפטי (אותו מנוע כמו בשאר הפיצ'רים)
   function confettiBurst(canvas){
     if(!canvas) return;
-    var ctx = canvas.getContext('2d');
-    var r = window.devicePixelRatio || 1;
-    function size(){ canvas.width = canvas.clientWidth*r; canvas.height = canvas.clientHeight*r; ctx.setTransform(r,0,0,r,0,0); }
+    const ctx = canvas.getContext('2d');
+    const r = window.devicePixelRatio || 1;
+    function size(){ canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; ctx.setTransform(r,0,0,r,0,0); }
     if(!canvas.__sized){ canvas.__sized = true; size(); addEventListener('resize', size); }
-    var colors=['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'], pieces=[], w=canvas.clientWidth, h=canvas.clientHeight;
-    for(var i=0;i<120;i++){ pieces.push({x:w/2,y:h/2,vx:(Math.random()*4-2),vy:(Math.random()*-3-2),r:Math.random()*6+3,c:colors[(Math.random()*colors.length)|0],a:1,spin:Math.random()*6.28,vr:(Math.random()*0.2-0.1)}); }
-    var g=0.05,t=0;
+    canvas.style.display='block'; size();
+    const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
+    const pieces = [];
+    for(let i=0;i<120;i++){ pieces.push({x:canvas.width/2/r, y:canvas.height/2/r, vx:(Math.random()*4-2), vy:(Math.random()*-3-2), r:Math.random()*6+3, c:colors[Math.floor(Math.random()*colors.length)], a:1}); }
     (function step(){
-      ctx.clearRect(0,0,w,h);
-      for(var i=0;i<pieces.length;i++){ var p=pieces[i]; p.vy+=g; p.x+=p.vx; p.y+=p.vy; p.spin+=p.vr; p.a-=0.008;
-        ctx.globalAlpha=Math.max(p.a,0); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin); ctx.fillStyle=p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r); ctx.restore();
-      }
-      ctx.globalAlpha=1; if(t++<260) requestAnimationFrame(step); else ctx.clearRect(0,0,w,h);
+      ctx.clearRect(0,0,canvas.width/r,canvas.height/r);
+      pieces.forEach(p=>{ p.vy+=0.05; p.x+=p.vx; p.y+=p.vy; p.a-=0.008; ctx.globalAlpha=Math.max(p.a,0); ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,p.r,p.r); });
+      ctx.globalAlpha=1;
+      if(pieces.some(p=>p.a>0)) requestAnimationFrame(step); else canvas.style.display='none';
     })();
   }
 

@@ -1722,6 +1722,7 @@ function captcha(){
   }
 
   function screenSuccess(){
+    showKfBadge();
     app.innerHTML = `
       <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="cap-success-icon" aria-hidden="true">💝</div>
@@ -2261,6 +2262,7 @@ else { document.body.className = ''; }
   }
 
   function screenSuccess(){
+    showKfBadge();
     render(`
   <div class="wrap wrap-nq ${themeClass} ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="nq-success-icon" aria-hidden="true">💝</div>
@@ -2569,6 +2571,7 @@ function shake(){
   }
 
   function screenSuccess(){
+    showKfBadge();
     app.innerHTML = `
       <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="sh-success-icon" aria-hidden="true">💝</div>
@@ -2923,6 +2926,7 @@ var copy = {
   }
 
   function screenSuccess(){
+    showKfBadge();
     app.innerHTML =
       '<div class="wrap wrap-breath' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '') + '">'+
         '<div class="bv-success-icon" aria-hidden="true">💝</div>'+

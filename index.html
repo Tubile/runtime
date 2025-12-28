@@ -1501,8 +1501,10 @@ function sfx(kind){
 
 // הצג סטטוס־בר רק בפריביו
 if (PREV) document.getElementById('status').style.display = 'flex';
-  // Runtime-only brand badge (hide in preview)
-if (!PREV) {
+  
+  // Function to show Kefpo badge (only on success screens)
+function showKfBadge() {
+  if (PREV) return; // Don't show in preview
   const wrap = document.querySelector('.wrap');
   const appEl = document.getElementById('app');
   if (wrap && appEl && !document.getElementById('kfBadge')) {
@@ -1513,7 +1515,7 @@ if (!PREV) {
     a.target = '_blank';
     a.rel = 'noopener';
     a.innerHTML = '<i aria-hidden="true"></i><span>Made by Kefpo.co</span>';
-    wrap.insertBefore(a, appEl);   // חשוב: מחוץ ל-#app כדי שלא ימחק בהחלפת מסכים
+    wrap.insertBefore(a, appEl);
   }
 }
 

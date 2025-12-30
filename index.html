@@ -1397,9 +1397,21 @@ function tryReactionFlow(fallbackUrl) {
       document.getElementById('btnShare').onclick = async () => {
         const file = new File([blob], "reaction.mp4", { type: "video/mp4" });
         const btn = document.getElementById('btnShare');
-        const originalText = btn.textContent;
-        btn.textContent = "🔓 Unlocking Gift...";
         
+        btn.textContent = "🔓 Unlocking Gift...";
+        btn.style.opacity = "0.8"; // פידבק ויזואלי
+
+        // פונקציית העברה משוריינת
+        const forceRedirect = () => {
+            // בדיקת בטיחות: האם יש בכלל לינק למתנה?
+            if (!fallbackUrl || fallbackUrl.length < 5) {
+                alert("Error: No gift URL found in the link parameters!");
+                return; 
+            }
+            // שימוש ב-replace כדי למנוע חזרה אחורה ולחייב מעבר
+            window.location.replace(fallbackUrl);
+        };
+
         if (navigator.share) {
           try {
             await navigator.share({
@@ -1407,16 +1419,16 @@ function tryReactionFlow(fallbackUrl) {
               title: 'My Reaction!',
               text: 'Check out my reaction 😂'
             });
-            // הצלחה
-            setTimeout(goGift, 500); 
+            // הצלחה - המתן חצי שנייה ועבור
+            setTimeout(forceRedirect, 500); 
           } catch (err) {
-             // משתמש ביטל או שגיאה - עדיין נעביר למתנה כי הוא "ניסה"
-             setTimeout(goGift, 500); 
+             // המשתמש ביטל או שגיאה - עדיין נעביר אותו למתנה
+             setTimeout(forceRedirect, 500); 
           }
         } else {
           // דסקטופ או דפדפן ישן
           alert("Video saved! Unlocking gift...");
-          goGift();
+          forceRedirect();
         }
       };
     };

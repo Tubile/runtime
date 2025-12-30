@@ -1376,6 +1376,9 @@ function tryReactionFlow(fallbackUrl) {
     mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
     
     mediaRecorder.onstop = () => {
+      // FIX: Stop camera logic moved here for iOS 14+ support
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      
       clearInterval(timerInt);
       timer.style.display = 'none';
       
@@ -1434,7 +1437,7 @@ function tryReactionFlow(fallbackUrl) {
 
   const stopRecording = () => {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-    if (stream) stream.getTracks().forEach(t => t.stop());
+    // Stream stop logic moved to onstop event
   };
   
   document.getElementById('btnRetake').onclick = () => {

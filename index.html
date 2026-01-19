@@ -1814,7 +1814,35 @@ function captcha(){
 // 2. המתנה קצרה ואז מעבר אוטומטי
       setTimeout(() => {
         // בום! קונפטי לפני המעבר
-        confettiBurst(confettiCanvas);
+        // 1. Logic for Narcissist-style confetti (Full Screen)
+        (function(){
+          const canvas = document.createElement('canvas');
+          canvas.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:9999;display:block";
+          document.body.appendChild(canvas);
+          
+          const ctx = canvas.getContext('2d');
+          const r = window.devicePixelRatio||1;
+          function size(){ canvas.width = innerWidth*r; canvas.height = innerHeight*r; ctx.setTransform(r,0,0,r,0,0); }
+          size(); 
+          
+          const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
+          const pieces = [];
+          for(let i=0;i<120;i++){
+            pieces.push({ x:innerWidth/2, y:innerHeight/2, vx:(Math.random()*4-2), vy:(Math.random()*-3-2), r:Math.random()*6+3, c:colors[Math.floor(Math.random()*colors.length)], a:1 });
+          }
+          
+          (function step(){
+            ctx.clearRect(0,0,innerWidth,innerHeight);
+            pieces.forEach(p=>{
+              p.vy+=0.05; p.x+=p.vx; p.y+=p.vy; p.a-=0.008; 
+              ctx.globalAlpha=Math.max(p.a,0); 
+              ctx.fillStyle=p.c; 
+              ctx.fillRect(p.x,p.y,p.r,p.r);
+            });
+            ctx.globalAlpha=1;
+            if(pieces.some(p=>p.a>0)) requestAnimationFrame(step); else canvas.remove();
+          })();
+        })();
         sfx('tada');
         
         // מעבר מסך
@@ -1837,10 +1865,6 @@ function captcha(){
         <canvas id="cap-confetti-final" class="confetti-canvas"></canvas>
       </div>
     `;
-    
-    // עוד קונפטי במסך הסופי לחגיגה
-    const c = document.getElementById('cap-confetti-final');
-    confettiBurst(c);
 
     const btn = document.getElementById('openGift');
     btn.addEventListener('click', ()=>{
@@ -2372,17 +2396,41 @@ else { document.body.className = ''; }
 
   function screenSuccess(){
     showKfBadge();
+    
+    // 2. Render HTML including the specific Canvas (Captcha Style)
     render(`
-  <div class="wrap wrap-nq ${themeClass} ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+      <div class="wrap wrap-nq ${themeClass} ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="nq-success-icon" aria-hidden="true">💝</div>
         <h1 class="nq-title">${copy.okTitle}</h1>
         <p class="nq-sub">${copy.okSub}</p>
         <button id="nqOpen" class="btn nq-btn nq-green"${PREV?' disabled':''}>${copy.okBtn}</button>
         ${PREV ? `<div class="nq-hint">Preview only – button disabled</div>` : ``}
+        
+        <canvas id="nq-confetti-canvas" class="confetti-canvas"></canvas>
       </div>
     `);
+    
     try{sfx('tada')}catch(_){}
-    confettiBurst();
+    
+    // 3. Logic for Captcha-style confetti (Targeting the specific canvas)
+    const canvas = document.getElementById('nq-confetti-canvas');
+    if(canvas) {
+        const ctx = canvas.getContext('2d');
+        const r = window.devicePixelRatio || 1;
+        function size(){ canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; ctx.setTransform(r,0,0,r,0,0); }
+        canvas.style.display='block'; size();
+        
+        const colors = ['#a78bfa','#60a5fa','#34d399','#f472b6','#f59e0b'];
+        const pieces = [];
+        for(let i=0;i<120;i++){ pieces.push({x:canvas.width/2/r, y:canvas.height/2/r, vx:(Math.random()*4-2), vy:(Math.random()*-3-2), r:Math.random()*6+3, c:colors[Math.floor(Math.random()*colors.length)], a:1}); }
+        (function step(){
+          ctx.clearRect(0,0,canvas.width/r,canvas.height/r);
+          pieces.forEach(p=>{ p.vy+=0.05; p.x+=p.vx; p.y+=p.vy; p.a-=0.008; ctx.globalAlpha=Math.max(p.a,0); ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,p.r,p.r); });
+          ctx.globalAlpha=1;
+          if(pieces.some(p=>p.a>0)) requestAnimationFrame(step); else canvas.style.display='none';
+        })();
+    }
+
     const btn = document.getElementById('nqOpen');
     btn?.addEventListener('click', ()=>{
       if(PREV) return;

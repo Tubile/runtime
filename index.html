@@ -1593,6 +1593,8 @@ function showKfBadge() {
   document.head.appendChild(style);
 
   setTimeout(() => {
+    // New Signal to React App:
+    window.parent.postMessage('SHOW_CHECKOUT_BTN', '*');
     const div = document.createElement('div');
     div.className = 'bridge-overlay';
     // Updated Copy

@@ -2085,14 +2085,19 @@ function infinite(){
       inner.innerHTML = `
         <div class="inf-success-icon" aria-hidden="true" style="margin:0 auto 16px">💝</div>
         <h1 style="font-size:24px; margin-bottom:8px">${copy.earned}</h1>
-        <button id="ibtn-final" class="btn green">${copy.btn8_success}</button>
+        <button id="ibtn-final" class="btn green"${PREV?' disabled':''}>${copy.btn8_success}</button>
+        ${ PREV ? `<div class="sub" style="margin-top:10px; font-size:12px">Preview only – button disabled</div>` : `` }
         <canvas id="confetti-final" class="confetti-canvas"></canvas>
       `;
       
       canvas = inner.querySelector('#confetti-final');
       boom();
       sfx('tada');
-      document.getElementById('ibtn-final').addEventListener('click', function(){ tryReactionFlow(GIFT); });
+      document.getElementById('ibtn-final').addEventListener('click', function(){
+        // Fix: Block click in preview mode
+        if(PREV) return;
+        tryReactionFlow(GIFT);
+      });
     }
   });
 }

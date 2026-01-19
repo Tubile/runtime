@@ -1518,28 +1518,27 @@ if (PREV) document.getElementById('status').style.display = 'flex';
   
   // Function to show Kefpo badge (Real Users) OR Success Bridge (Preview Users)
 function showKfBadge() {
-  // הגנה: מוודאים שמשתנה PREV קיים (מונע קריסה אם הועתק מחוץ לסקופ)
-  var isPreview = (typeof PREV !== 'undefined') ? PREV : false;
-
-  // תרחיש א': משתמש אמיתי (לא פריביו) - מציגים באדג' קטן
-  if (!isPreview) {
-    var wrap = document.querySelector('.wrap');
-    var appEl = document.getElementById('app');
+  // --- Scenario A: Real User (Not Preview) ---
+  if (!PREV) {
+    const wrap = document.querySelector('.wrap');
+    const appEl = document.getElementById('app');
     if (wrap && appEl && !document.getElementById('kfBadge')) {
-      var a = document.createElement('a');
-      a.id = 'kfBadge'; a.className = 'kf-badge';
-      a.href = 'https://kefpo.co'; a.target = '_blank'; a.rel = 'noopener';
+      const a = document.createElement('a');
+      a.id = 'kfBadge';
+      a.className = 'kf-badge';
+      a.href = 'https://kefpo.co';
+      a.target = '_blank';
+      a.rel = 'noopener';
       a.innerHTML = '<i aria-hidden="true"></i><span>Made by Kefpo.co</span>';
       wrap.insertBefore(a, appEl);
     }
     return;
   }
 
-  // תרחיש ב': מצב פריביו - מציגים את ה-Bridge (הכפתור הגדול)
+  // --- Scenario B: Preview Mode (The "Success Bridge") ---
   if (document.getElementById('bridge-css')) return;
-
-  // ה-CSS המלא (כולל הכפתור החדש)
-  var css = `
+  
+  const css = `
     .bridge-overlay {
       position: fixed; inset: 0; z-index: 10000;
       background: rgba(11, 16, 32, 0.6); backdrop-filter: blur(4px);
@@ -1551,17 +1550,19 @@ function showKfBadge() {
     .bridge-card {
       background: #151b2e; border-top: 1px solid rgba(255,255,255,0.15);
       border-radius: 24px 24px 0 0; padding: 32px 24px 48px 24px;
+      /* Added subtle green glow */
       box-shadow: 0 -10px 40px rgba(0,0,0,0.5), 0 -5px 60px rgba(16, 185, 129, 0.15);
       transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
       text-align: center; position: relative;
     }
     .bridge-overlay.show .bridge-card { transform: translateY(0); }
 
+    /* The Pulsing Arrow pointing STRAIGHT UP */
     .bridge-arrow-container {
-      position: absolute; top: -70px; right: 20px;
+      position: absolute; top: -80px; right: 20px;
       display: flex; flex-direction: column; align-items: center;
+      /* Changed animation name */
       animation: floatUpStraight 1.5s ease-in-out infinite;
-      pointer-events: none;
     }
     .bridge-arrow-text {
       background: #10b981; color: #062d24; font-weight: 800; font-size: 13px;
@@ -1571,8 +1572,10 @@ function showKfBadge() {
     }
     .bridge-arrow-icon {
       font-size: 42px; line-height: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+      /* Removed rotation so it points straight up */
     }
 
+    /* New keyframes for straight up movement */
     @keyframes floatUpStraight {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-15px); }
@@ -1580,44 +1583,24 @@ function showKfBadge() {
 
     .bridge-title { font-size: 22px; font-weight: 800; margin: 0 0 8px; color: #fff; }
     .bridge-sub { font-size: 16px; color: #9aa3b2; margin: 0 0 20px; line-height: 1.5; }
-    .bridge-price { font-size: 18px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.1); display: inline-block; padding: 8px 16px; border-radius: 12px; border: 1px solid rgba(16,185,129,0.2); margin-bottom: 24px; }
+    .bridge-price { font-size: 18px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.1); display: inline-block; padding: 8px 16px; border-radius: 12px; border: 1px solid rgba(16,185,129,0.2); }
     .bridge-old { text-decoration: line-through; color: #64748b; font-weight: 400; margin-right: 6px; font-size: 0.9em; }
-    
-    .bridge-btn {
-      width: 100%; padding: 18px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white; font-size: 18px; font-weight: 800;
-      border: none; border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
-      cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
-      position: relative; overflow: hidden;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .bridge-btn:active { transform: scale(0.98); }
-    .bridge-btn::after {
-      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-      animation: bridgeShine 3s infinite;
-    }
-    @keyframes bridgeShine { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
   `;
   
-  var style = document.createElement('style');
+  const style = document.createElement('style');
   style.id = 'bridge-css';
   style.textContent = css;
   document.head.appendChild(style);
 
-  setTimeout(function() {
-    // מנסים לשלוח סיגנל ללובאבל (בתוך try-catch כדי לא לשבור כלום)
-    try { window.parent.postMessage('SHOW_CHECKOUT_BTN', '*'); } catch(e){}
-
-    var div = document.createElement('div');
+  setTimeout(() => {
+    const div = document.createElement('div');
     div.className = 'bridge-overlay';
+    // Updated Copy
     div.innerHTML = `
       <div class="bridge-card">
         <div class="bridge-arrow-container">
           <div class="bridge-arrow-text">Click to Finalize!</div>
-          <div class="bridge-arrow-icon">👇</div>
+          <div class="bridge-arrow-icon">👆</div>
         </div>
 
         <h2 class="bridge-title">This was just a demo</h2>
@@ -1629,32 +1612,15 @@ function showKfBadge() {
           <span class="bridge-old">$9.95</span> $5.95 Today
         </div>
         
-        <button id="bridge-cta-btn" class="bridge-btn">
-          Get Your Real Gift 🎁
-        </button>
+        <div style="margin-top:24px; font-size:13px; color:#64748b;">
+          Tap the button at the top-right corner ↗
+        </div>
       </div>
     `;
     document.body.appendChild(div);
-    requestAnimationFrame(function(){ div.classList.add('show'); });
+    requestAnimationFrame(() => div.classList.add('show'));
     try { window.sfx('whoosh'); } catch(e){}
-
-    // חיבור האירוע בצורה בטוחה
-    var btn = document.getElementById('bridge-cta-btn');
-    if (btn) {
-      btn.onclick = function() {
-        try { 
-          console.log("PostMessage sent");
-          window.parent.postMessage('FINALIZE_PRANK_CLICKED', '*'); 
-        } catch(e) { console.error(e); }
-      };
-    }
   }, 1500);
-}
-    // --- חיבור הכפתור ללובאבל (PostMessage) ---
-    document.getElementById('bridge-cta-btn').onclick = function() {
-      // שליחת הודעה ללובאבל שתפעיל את handleGetPrank
-      window.parent.postMessage('FINALIZE_PRANK_CLICKED', '*');
-    };
 }
 
 function el(html){ document.getElementById('app').innerHTML = html; }

@@ -1648,10 +1648,10 @@ function showKfBadge() {
     requestAnimationFrame(() => div.classList.add('show'));
     try { window.sfx('whoosh'); } catch(e){}
 
-    // חיבור הלחיצה לכפתור המחיר
-    const btn = document.getElementById('bridge-cta-btn');
-    if (btn) {
-      btn.onclick = function() {
+// --- חיבור לוגיקת הלחיצה (מעודכן לכפתור המחיר) ---
+    const priceBtn = document.getElementById('green-price-btn');
+    if (priceBtn) {
+      priceBtn.onclick = function() {
         console.log("Price button clicked");
         window.parent.postMessage('FINALIZE_PRANK_CLICKED', '*');
       };

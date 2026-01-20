@@ -142,37 +142,6 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
 .react-btn-sec { background: transparent; color: #64748b; border: none; padding: 10px; font-size: 14px; margin-top: 4px; }
 .react-btn-share { background: #25D366; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); } 
 .hidden { display: none !important; }
-  /* --- PREVIEW TOOLTIPS SYSTEM --- */
-    .prev-tooltip {
-      position: fixed; z-index: 10001; top: 20%; left: 50%; transform: translateX(-50%) translateY(20px);
-      width: 90%; max-width: 320px;
-      background: rgba(21, 27, 46, 0.95); backdrop-filter: blur(12px);
-      border: 1px solid rgba(96,165,250,.35);
-      border-radius: 16px; padding: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.7);
-      opacity: 0; pointer-events: none; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-      text-align: center;
-    }
-    .prev-tooltip.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
-    
-    .tooltip-icon { font-size: 24px; margin-bottom: 12px; display: block; filter: drop-shadow(0 0 10px rgba(96,165,250,0.5)); }
-    .tooltip-title { color: #fff; font-size: 18px; font-weight: 800; margin-bottom: 8px; display: block; }
-    .tooltip-text { color: #9aa3b2; font-size: 15px; line-height: 1.5; margin-bottom: 20px; display: block; }
-    
-    .tooltip-btn {
-      background: rgba(96,165,250,.15); color: #60a5fa; border: 1px solid rgba(96,165,250,.3);
-      padding: 12px 0; width: 100%; border-radius: 12px; font-weight: 700; cursor: pointer;
-      transition: all 0.2s; font-size: 15px;
-    }
-    .tooltip-btn:active { transform: scale(0.98); background: rgba(96,165,250,.25); }
-    
-    /* Target Pulse Effect */
-    .tooltip-pulse { animation: tipPulse 2s infinite; position: relative; z-index: 50; }
-    @keyframes tipPulse { 
-      0% { text-shadow: 0 0 0 rgba(96,165,250,0); } 
-      50% { text-shadow: 0 0 20px rgba(96,165,250,0.8); } 
-      100% { text-shadow: 0 0 0 rgba(96,165,250,0); } 
-    }
 </style>
 
 <!-- Infinite UX extra classes -->
@@ -1826,7 +1795,6 @@ function captcha(){
   }
 
   function screenGrid(){
-    setTimeout(() => showTooltip('captcha'), 800);
     app.innerHTML = `
       <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <h1 class="cap-title">${copy.gridHeader}</h1>
@@ -2350,8 +2318,6 @@ else { document.body.className = ''; }
 
   // Render helpers
   function render(html){ app.innerHTML = html; }
-  // הפעלת טולטיפ פריביו
-      setTimeout(() => showTooltip('intro'), 1500);
 
   function toast(el, text){ if(!el) return; el.textContent = text||''; }
   
@@ -2826,7 +2792,7 @@ function shake(){
 function breathVerify(){
   // --- פרמטרים מה-URL (חוזה Runtime v3.5) ---
   var qs   = new URLSearchParams(location.search);
-  var PREV = true; // עקיפה ידנית: תמיד במצב פריביו לצורך בדיקות
+  var PREV = (qs.get('preview')||'0').trim()==='1';
   var NAME = (qs.get('name')||'Friend').trim();
   var GIFT = normalizeUrl(qs.get('giftUrl'));
   var THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
@@ -2961,56 +2927,6 @@ var copy = {
 
   // DOM יעד
   var app = document.getElementById('app');
-  // --- TOOLTIP SYSTEM LOGIC (Updated: Resets on Reload) ---
-  function showTooltip(type) {
-    // 1. הגנה קריטית: מופיע רק ב-Preview Mode
-    if (typeof PREV === 'undefined' || !PREV) return;
-
-    // 2. הגנה מכפילויות: אם כבר יש טולטיפ פתוח על המסך - אל תפתח עוד אחד
-    if (document.querySelector('.prev-tooltip')) return;
-
-    // תוכן לפי סוג
-    let title, text, icon;
-    if (type === 'intro') {
-      icon = '👤';
-      title = 'Preview Mode';
-      text = '"Friend" is a placeholder. In the Finalize step, you will replace it with their real name.<br><br>This is what <b>they</b> will see first!';
-      // Pulse Effect on Title
-      const t = document.querySelector('.title');
-      if(t) t.classList.add('tooltip-pulse');
-    } else if (type === 'captcha') {
-      icon = '📸';
-      title = 'Placeholder Images';
-      text = 'These are just stock photos. In the Finalize step, you will upload <b>THEIR</b> photo.<br><br>Imagine their reaction... 😂';
-    }
-
-    // יצירת האלמנט
-    const div = document.createElement('div');
-    div.className = 'prev-tooltip';
-    div.innerHTML = `
-      <span class="tooltip-icon">${icon}</span>
-      <span class="tooltip-title">${title}</span>
-      <span class="tooltip-text">${text}</span>
-      <button class="tooltip-btn">Got it!</button>
-    `;
-    document.body.appendChild(div);
-
-    // כניסה חלקה (אנימציה)
-    requestAnimationFrame(() => div.classList.add('show'));
-
-    // לוגיקת סגירה (לחיצה על הכפתור)
-    div.querySelector('button').onclick = function() {
-      // הסרת הקלאס (אנימציית יציאה)
-      div.classList.remove('show');
-      
-      // הסרת אפקט הפעימה מהכותרת
-      const t = document.querySelector('.title');
-      if(t) t.classList.remove('tooltip-pulse');
-      
-      // מחיקה פיזית מה-DOM אחרי חצי שנייה
-      setTimeout(() => div.remove(), 500);
-    };
-  }
   app.classList.remove('card');
 
   // --- מסכים ---

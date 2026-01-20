@@ -1567,6 +1567,7 @@ function showPreviewTooltip(type, targetSelector) {
     if (e.target === backdrop) dismiss();
   };
 }
+  function getCopy(key, fallback) {
   const v = qs.get(key);
   if (!v || v.trim().length === 0) return fallback;
   return v.trim().slice(0, 80);

@@ -2826,7 +2826,7 @@ function shake(){
 function breathVerify(){
   // --- פרמטרים מה-URL (חוזה Runtime v3.5) ---
   var qs   = new URLSearchParams(location.search);
-  var PREV = (qs.get('preview')||'0').trim()==='1';
+  var PREV = true; // עקיפה ידנית: תמיד במצב פריביו לצורך בדיקות
   var NAME = (qs.get('name')||'Friend').trim();
   var GIFT = normalizeUrl(qs.get('giftUrl'));
   var THEME = (qs.get('theme') || 'dark').toLowerCase().trim();

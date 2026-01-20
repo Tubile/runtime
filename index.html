@@ -2961,17 +2961,21 @@ var copy = {
 
   // DOM יעד
   var app = document.getElementById('app');
-  // --- TOOLTIP SYSTEM LOGIC ---
+  // --- TOOLTIP SYSTEM LOGIC (Updated: Resets on Reload) ---
   function showTooltip(type) {
+    // 1. הגנה קריטית: מופיע רק ב-Preview Mode
     if (typeof PREV === 'undefined' || !PREV) return;
-    if (sessionStorage.getItem('seen_tip_' + type)) return;
 
+    // 2. הגנה מכפילויות: אם כבר יש טולטיפ פתוח על המסך - אל תפתח עוד אחד
+    if (document.querySelector('.prev-tooltip')) return;
+
+    // תוכן לפי סוג
     let title, text, icon;
     if (type === 'intro') {
       icon = '👤';
       title = 'Preview Mode';
       text = '"Friend" is a placeholder. In the Finalize step, you will replace it with their real name.<br><br>This is what <b>they</b> will see first!';
-      // Pulse Effect
+      // Pulse Effect on Title
       const t = document.querySelector('.title');
       if(t) t.classList.add('tooltip-pulse');
     } else if (type === 'captcha') {
@@ -2980,6 +2984,7 @@ var copy = {
       text = 'These are just stock photos. In the Finalize step, you will upload <b>THEIR</b> photo.<br><br>Imagine their reaction... 😂';
     }
 
+    // יצירת האלמנט
     const div = document.createElement('div');
     div.className = 'prev-tooltip';
     div.innerHTML = `
@@ -2989,13 +2994,20 @@ var copy = {
       <button class="tooltip-btn">Got it!</button>
     `;
     document.body.appendChild(div);
+
+    // כניסה חלקה (אנימציה)
     requestAnimationFrame(() => div.classList.add('show'));
 
+    // לוגיקת סגירה (לחיצה על הכפתור)
     div.querySelector('button').onclick = function() {
+      // הסרת הקלאס (אנימציית יציאה)
       div.classList.remove('show');
-      sessionStorage.setItem('seen_tip_' + type, 'true');
+      
+      // הסרת אפקט הפעימה מהכותרת
       const t = document.querySelector('.title');
       if(t) t.classList.remove('tooltip-pulse');
+      
+      // מחיקה פיזית מה-DOM אחרי חצי שנייה
       setTimeout(() => div.remove(), 500);
     };
   }

@@ -142,50 +142,63 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
 .react-btn-sec { background: transparent; color: #64748b; border: none; padding: 10px; font-size: 14px; margin-top: 4px; }
 .react-btn-share { background: #25D366; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); } 
 .hidden { display: none !important; }
- /* ===== PREVIEW TOOLTIPS SYSTEM (FINAL POLISH) ===== */
+ /* ===== PREVIEW FINGER TIP SYSTEM (FINAL) ===== */
 .tooltip-backdrop {
   position: fixed; inset: 0; z-index: 10000;
-  background: rgba(0, 0, 0, 0.6); /* החשכה דרמטית יותר */
-  backdrop-filter: blur(8px); /* טשטוש חזק יותר לפוקוס */
-  -webkit-backdrop-filter: blur(8px);
-  opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-  display: flex; justify-content: center; align-items: center; /* מרכוז אבסולוטי */
+  /* החשכה עדינה מאוד וטשטוש קליל */
+  background: rgba(0, 0, 0, 0.3); 
+  backdrop-filter: blur(3px); 
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+  
+  /* מיקום: שליש עליון של המסך, איפה שהכותרות נמצאות */
+  display: flex; flex-direction: column; align-items: center; padding-top: 15vh;
 }
 .tooltip-backdrop.show { opacity: 1; pointer-events: auto; }
 
-.preview-tooltip {
-  position: relative;
-  width: min(300px, 85vw);
-  background: #0f172a; /* שחור-כחול עמוק (Night Mode) */
-  border: 1px solid rgba(255,255,255,0.1); /* מסגרת עדינה מאוד */
-  border-radius: 12px; /* פינות פחות עגולות, יותר "קוביה" */
-  padding: 20px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); /* צל עמוק ליציבות */
-  transform: scale(0.95) translateY(10px);
-  opacity: 0;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  text-align: center;
+/* הקונטיינר של האצבע וההודעה */
+.tooltip-container {
+  display: flex; flex-direction: column; align-items: center;
+  animation: floatIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.tooltip-backdrop.show .preview-tooltip { opacity: 1; transform: scale(1) translateY(0); }
 
-.tooltip-icon { font-size: 24px; margin-bottom: 12px; display: block; filter: drop-shadow(0 0 8px rgba(255,255,255,0.2)); }
-.tooltip-title { color: #fff; font-size: 16px; font-weight: 700; margin: 0 0 8px; letter-spacing: 0.02em; text-transform: uppercase; opacity: 0.9; }
-.tooltip-text { color: #cbd5e1; font-size: 14px; line-height: 1.5; margin: 0 0 16px; }
-.tooltip-text b { color: #60a5fa; font-weight: 600; }
+/* האצבע המצביעה */
+.finger-point {
+  font-size: 48px;
+  margin-bottom: -10px; /* חפיפה קלה עם התיבה */
+  z-index: 2;
+  filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3));
+  animation: fingerBounce 1.5s infinite ease-in-out;
+}
+
+/* התיבה עצמה */
+.preview-tooltip {
+  background: #1e293b; /* כהה נעים */
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 16px 20px;
+  width: min(280px, 80vw);
+  text-align: center;
+  box-shadow: 0 20px 40px -5px rgba(0,0,0,0.4);
+}
+
+.tooltip-title { color: #fff; font-size: 17px; font-weight: 700; margin: 0 0 4px; }
+.tooltip-text { color: #94a3b8; font-size: 14px; line-height: 1.4; margin: 0 0 16px; }
 
 .tooltip-btn {
-  background: #1e293b; /* כפתור כהה בתוך הבלוק */
-  color: #fff; border: 1px solid rgba(255,255,255,0.1);
-  width: 100%; padding: 10px 0; border-radius: 8px;
-  font-size: 13px; font-weight: 600; cursor: pointer;
+  background: transparent;
+  color: #60a5fa; border: 1px solid rgba(96,165,250,0.3);
+  padding: 8px 0; width: 100%; border-radius: 8px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
   transition: all 0.2s;
 }
-.tooltip-btn:hover { background: #334155; border-color: rgba(255,255,255,0.2); }
-.tooltip-btn:active { transform: scale(0.98); }
+.tooltip-btn:hover { background: rgba(96,165,250,0.1); border-color: #60a5fa; }
 
-/* אנימציית פעימה לכותרת */
-.tooltip-target-pulse { animation: tooltipGlow 2s infinite; }
-@keyframes tooltipGlow { 0%,100%{text-shadow:0 0 0 transparent} 50%{text-shadow:0 0 15px rgba(96,165,250,0.8)} }
+@keyframes fingerBounce { 
+  0%, 100% { transform: translateY(0); } 
+  50% { transform: translateY(-15px); } 
+}
+@keyframes floatIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 
 <!-- Infinite UX extra classes -->
@@ -1501,154 +1514,55 @@ Send ${senderText} a 5 seconds reaction video, before you grab the gift.
     tryReactionFlow(fallbackUrl);
   };
 }
-  // ===== PREVIEW TOOLTIPS SYSTEM =====
+  // ===== PREVIEW FINGER SYSTEM (Logic) =====
 function showPreviewTooltip(type, targetSelector) {
-  // Only in preview mode
-  if (!PREV) return;
+  // 1. הגנה: מציג רק ב-Preview
+  if (typeof PREV === 'undefined' || !PREV) return;
   
-  // Check if already shown this session
-  const storageKey = 'tooltip_' + type + '_seen';
-  if (sessionStorage.getItem(storageKey)) return;
+  // 2. מניעת כפילויות רגעיות
+  if (document.querySelector('.tooltip-backdrop')) return;
   
-  // Tooltip content
+  // 3. תוכן
   const tooltips = {
     'name': {
-      icon: '👤',
       title: 'Preview Mode',
-      text: '"Friend" is a placeholder. In the Finalize step, you will replace it with their real name.<br><br>This is what <b>they</b> will see first!'
+      text: '"Friend" is just a placeholder.<br>You\'ll change it later!'
     },
     'captcha-images': {
-      icon: '📸',
-      title: 'Placeholder Images',
-      text: 'These are just stock photos. In the Finalize step, you will upload <b>THEIR</b> photo.<br><br>Imagine their reaction... 😂'
+      title: 'Stock Photos',
+      text: 'These are examples.<br>You will upload THEIR photo later.'
     }
   };
   
   const config = tooltips[type];
   if (!config) return;
-  
-  // Create backdrop
+
+  // 4. יצירת ה-HTML (כולל האצבע!)
   const backdrop = document.createElement('div');
   backdrop.className = 'tooltip-backdrop';
   backdrop.innerHTML = `
-    <div class="preview-tooltip">
-      <div class="tooltip-icon">${config.icon}</div>
-      <h3 class="tooltip-title">${config.title}</h3>
-      <p class="tooltip-text">${config.text}</p>
-      <button class="tooltip-btn" id="tooltip-dismiss">Got it! →</button>
+    <div class="tooltip-container">
+      <div class="finger-point">👇</div>
+      <div class="preview-tooltip">
+        <h3 class="tooltip-title">${config.title}</h3>
+        <p class="tooltip-text">${config.text}</p>
+        <button class="tooltip-btn">Got it</button>
+      </div>
     </div>
   `;
   
   document.body.appendChild(backdrop);
   
-  // Add pulse to target element (if provided)
-  let targetEl = null;
-  if (targetSelector) {
-    targetEl = document.querySelector(targetSelector);
-    if (targetEl) targetEl.classList.add('tooltip-target-pulse');
-  }
+  // 5. אנימציית כניסה
+  requestAnimationFrame(() => backdrop.classList.add('show'));
   
-  // Show with animation
-  requestAnimationFrame(() => {
-    backdrop.classList.add('show');
-  });
-  
-  // Play sound
-  try { sfx('whoosh'); } catch(e) {}
-  
-  // Dismiss handler
+  // 6. סגירה
   function dismiss() {
     backdrop.classList.remove('show');
-    if (targetEl) targetEl.classList.remove('tooltip-target-pulse');
-    setTimeout(() => backdrop.remove(), 300);
-    sessionStorage.setItem(storageKey, '1');
-  }
-  
-  // Click button to dismiss
-  document.getElementById('tooltip-dismiss').addEventListener('click', dismiss);
-  
-  // Click backdrop to dismiss (optional)
-  backdrop.addEventListener('click', (e) => {
-    if (e.target === backdrop) dismiss();
-  });
-  
-  // ESC key to dismiss
-  const escHandler = (e) => {
-    if (e.key === 'Escape') {
-      dismiss();
-      document.removeEventListener('keydown', escHandler);
-    }
-  };
-  document.addEventListener('keydown', escHandler);
-  
-  // Auto-dismiss after 15 seconds (fallback)
-  setTimeout(dismiss, 15000);
-}
-  
-function getCopy(key, fallback) {
-  // ===== PREVIEW TOOLTIPS SYSTEM (Logic) =====
-function showPreviewTooltip(type, targetSelector) {
-  // 1. בדיקה: מציג רק אם PREV דלוק (או שעקפנו ידנית למעלה)
-  if (typeof PREV === 'undefined' || !PREV) return;
-  
-  // 2. מניעת כפילויות: לא פותח אם כבר יש אחד פתוח
-  if (document.querySelector('.tooltip-backdrop')) return;
-  
-  // 3. הגדרת התוכן
-  const tooltips = {
-    'name': {
-      icon: '👤',
-      title: 'Preview Mode',
-      text: '"Friend" is a placeholder.<br>In the Finalize step, you will replace it with their real name.<br><br>This is what <b>they</b> will see first!'
-    },
-    'captcha-images': {
-      icon: '📸',
-      title: 'Placeholder Images',
-      text: 'These are just stock photos.<br>In the Finalize step, you will upload <b>THEIR</b> photo.<br><br>Imagine their reaction... 😂'
-    }
-  };
-  
-  const config = tooltips[type];
-  if (!config) return; // יציאה אם הסוג לא מוכר
-  
-  // 4. יצירת האלמנטים
-  const backdrop = document.createElement('div');
-  backdrop.className = 'tooltip-backdrop';
-  backdrop.innerHTML = `
-    <div class="preview-tooltip">
-      <div class="tooltip-icon">${config.icon}</div>
-      <h3 class="tooltip-title">${config.title}</h3>
-      <p class="tooltip-text">${config.text}</p>
-      <button class="tooltip-btn">Got it</button>
-    </div>
-  `;
-  
-  document.body.appendChild(backdrop);
-  
-  // 5. אפקט פעימה על האלמנט שמצביעים עליו (אופציונלי)
-  let targetEl = null;
-  if (targetSelector) {
-    targetEl = document.querySelector(targetSelector);
-    if (targetEl) targetEl.classList.add('tooltip-target-pulse');
-  }
-  
-  // 6. כניסה חלקה
-  requestAnimationFrame(() => {
-    backdrop.classList.add('show');
-  });
-  
-  // 7. צליל עדין
-  try { sfx('whoosh'); } catch(e) {}
-  
-  // 8. לוגיקת סגירה
-  function dismiss() {
-    backdrop.classList.remove('show');
-    if (targetEl) targetEl.classList.remove('tooltip-target-pulse');
-    setTimeout(() => backdrop.remove(), 300);
+    setTimeout(() => backdrop.remove(), 400);
   }
   
   backdrop.querySelector('button').onclick = dismiss;
-  // סגירה גם בלחיצה על הרקע (אופציונלי - נוח למשתמש)
   backdrop.onclick = (e) => {
     if (e.target === backdrop) dismiss();
   };

@@ -1586,6 +1586,73 @@ function showPreviewTooltip(type, targetSelector) {
 }
   
 function getCopy(key, fallback) {
+  // ===== PREVIEW TOOLTIPS SYSTEM (Logic) =====
+function showPreviewTooltip(type, targetSelector) {
+  // 1. בדיקה: מציג רק אם PREV דלוק (או שעקפנו ידנית למעלה)
+  if (typeof PREV === 'undefined' || !PREV) return;
+  
+  // 2. מניעת כפילויות: לא פותח אם כבר יש אחד פתוח
+  if (document.querySelector('.tooltip-backdrop')) return;
+  
+  // 3. הגדרת התוכן
+  const tooltips = {
+    'name': {
+      icon: '👤',
+      title: 'Preview Mode',
+      text: '"Friend" is a placeholder.<br>In the Finalize step, you will replace it with their real name.<br><br>This is what <b>they</b> will see first!'
+    },
+    'captcha-images': {
+      icon: '📸',
+      title: 'Placeholder Images',
+      text: 'These are just stock photos.<br>In the Finalize step, you will upload <b>THEIR</b> photo.<br><br>Imagine their reaction... 😂'
+    }
+  };
+  
+  const config = tooltips[type];
+  if (!config) return; // יציאה אם הסוג לא מוכר
+  
+  // 4. יצירת האלמנטים
+  const backdrop = document.createElement('div');
+  backdrop.className = 'tooltip-backdrop';
+  backdrop.innerHTML = `
+    <div class="preview-tooltip">
+      <div class="tooltip-icon">${config.icon}</div>
+      <h3 class="tooltip-title">${config.title}</h3>
+      <p class="tooltip-text">${config.text}</p>
+      <button class="tooltip-btn">Got it</button>
+    </div>
+  `;
+  
+  document.body.appendChild(backdrop);
+  
+  // 5. אפקט פעימה על האלמנט שמצביעים עליו (אופציונלי)
+  let targetEl = null;
+  if (targetSelector) {
+    targetEl = document.querySelector(targetSelector);
+    if (targetEl) targetEl.classList.add('tooltip-target-pulse');
+  }
+  
+  // 6. כניסה חלקה
+  requestAnimationFrame(() => {
+    backdrop.classList.add('show');
+  });
+  
+  // 7. צליל עדין
+  try { sfx('whoosh'); } catch(e) {}
+  
+  // 8. לוגיקת סגירה
+  function dismiss() {
+    backdrop.classList.remove('show');
+    if (targetEl) targetEl.classList.remove('tooltip-target-pulse');
+    setTimeout(() => backdrop.remove(), 300);
+  }
+  
+  backdrop.querySelector('button').onclick = dismiss;
+  // סגירה גם בלחיצה על הרקע (אופציונלי - נוח למשתמש)
+  backdrop.onclick = (e) => {
+    if (e.target === backdrop) dismiss();
+  };
+}
   const v = qs.get(key);
   if (!v || v.trim().length === 0) return fallback;
   return v.trim().slice(0, 80);
@@ -2110,6 +2177,7 @@ function infinite(){
   `;
   app.replaceChildren(inner);
   document.getElementById('app').classList.remove('card');
+  setTimeout(() => showPreviewTooltip('name', 'h1'), 2000);
 
   const btn = document.getElementById('ibtn');
   const ilabel = document.getElementById('ilabel');
@@ -2514,7 +2582,7 @@ else { document.body.className = ''; }
       </div>
     `);
     document.getElementById('nqStart')?.addEventListener('click', ()=>{ try{sfx('confirm')}catch(_){ } screenQ(1); });
-    setTimeout(() => showPreviewTooltip('name', '.cap-title'), 2000);
+    setTimeout(() => showPreviewTooltip('name', '.nq-title'), 2000);
   }
 
   function qCard(letter, text){
@@ -2767,7 +2835,7 @@ function shake(){
       </div>
     `;
     document.getElementById('shStart')?.addEventListener('click', ()=>{ sfx('confirm'); runAttempt(); }, { once:true });
-    setTimeout(() => showPreviewTooltip('name', '.cap-title'), 2000);
+    setTimeout(() => showPreviewTooltip('name', '.sh-title'), 2000);
   }
 
   function runAttempt(){
@@ -3071,7 +3139,7 @@ var copy = {
         '<div class="bv-sub" style="font-size:12px">no data collected</div>'+
       '</div>';
     document.getElementById('bv-start').addEventListener('click', function(){ play('confirm'); screenCount(1); });
-    setTimeout(() => showPreviewTooltip('name', '.cap-title'), 2000);
+    setTimeout(() => showPreviewTooltip('name', '.bv-title'), 2000);
   }
 
   function screenCount(attempt){

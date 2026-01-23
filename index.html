@@ -1609,6 +1609,7 @@ function showPreviewTooltip(type, targetSelector) {
       // --- תיקון FRIEND (מסך 1) ---
       // אנחנו לא מזיזים את ה-LEFT (משאירים את הבועה באמצע שזה יפה)
       // אנחנו רק מרימים אותה למעלה ומזיזים את החץ שמאלה:
+      left = rect.left + 25;
       top = rect.top - 130;
       if (bubble) bubble.classList.add('fix-arrow');
     } 

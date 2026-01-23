@@ -1588,26 +1588,27 @@ function showPreviewTooltip(type, targetSelector) {
   
   document.body.appendChild(backdrop);
   
-  // 6. 🎯 מיקום הטולטיפ מעל האלמנט (זה הקסם!)
-  requestAnimationFrame(() => {
-    const rect = targetEl.getBoundingClientRect();
-    const container = backdrop.querySelector('.tooltip-container');
+  // מחשב איפה למקם את הטולטיפ - 100px מעל האלמנט
+    // שינינו ל-let כדי שנוכל לשנות את הגובה (top) בהתאם לצורך
+    let top = rect.top - 100;
     
-    // מחשב איפה למקם את הטולטיפ - 100px מעל האלמנט
-   // מחשב איפה למקם את הטולטיפ - 100px מעל האלמנט
- const top = rect.top - 100;
+    // --- שינוי כירורגי למיקום (גרסה 2 - מתוקנת ומדויקת) ---
+    let left = rect.left + (rect.width / 2); // ברירת מחדל: אמצע
 
- // --- שינוי כירורגי למיקום ---
- let left = rect.left + (rect.width / 2); // ברירת מחדל: אמצע
-
- if (type === 'name') {
-   // מזיז חזק שמאלה כדי להיות מעל המילה Friend
-   left = rect.left + 40; 
- } 
- else if (type === 'captcha-images') {
-   // מזיז ימינה כדי להיות מעל התמונה הימנית העליונה
-   left = rect.right - 50; 
- }
+    if (type === 'name') {
+      // תיקון FRIEND:
+      // 1. יותר שמאלה: שמנו 25 במקום 40 (מקרב את זה להתחלה של המילה)
+      // 2. יותר למעלה: הורדנו 130 במקום 100 (מרים את הבועה למעלה)
+      left = rect.left + 25; 
+      top = rect.top - 130;
+    } 
+    else if (type === 'captcha-images') {
+      // תיקון CAPTCHA:
+      // היה ימינה מדי (off grid)? אנחנו מושכים חזק שמאלה.
+      // במקום להחסיר 50, אנחנו מחסירים 100 מהצד הימני.
+      left = rect.right - 100; 
+    }
+    // ----------------------------
     
     container.style.position = 'fixed';
     container.style.top = top + 'px';

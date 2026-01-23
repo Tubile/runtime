@@ -173,7 +173,7 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
   padding: 10px 14px 12px 14px;
-  width: min(220px, 70vw);
+  width: min(210px, 70vw);
   text-align: center;
   box-shadow: 0 12px 32px rgba(0,0,0,0.35);
 }
@@ -1546,40 +1546,40 @@ Send ${senderText} a 5 seconds reaction video, before you grab the gift.
     tryReactionFlow(fallbackUrl);
   };
 }
-  // ===== PREVIEW FINGER SYSTEM (Logic) =====
+  // ===== PREVIEW FINGER SYSTEM (SURGICAL FIX) =====
 function showPreviewTooltip(type, targetSelector) {
-  // 1. הגנה: מציג רק ב-Preview
   if (typeof PREV === 'undefined' || !PREV) return;
-  
-  // 2. מניעת כפילויות רגעיות
   if (document.querySelector('.tooltip-backdrop')) return;
   
-  // 3. מציאת האלמנט שעליו אנחנו מדברים
-  const targetEl = document.querySelector(targetSelector);
-  if (!targetEl) return;
-  
-  // 4. תוכן
+  // הגדרות תוכן + מיקום
   const tooltips = {
     'name': {
-      title: '',
-      text: 'In the finalize step,<br>you\'ll change "friend" to their name'
+      title: 'Preview Mode',
+      text: '"Friend" is just a placeholder.<br>You\'ll change it later!',
+      // translateX(-40%): מזיז חזק שמאלה לכיוון המילה Friend
+      style: 'transform: translateX(-40%)' 
     },
     'captcha-images': {
-      title: '',
-      text: 'In the finalize step,<br>you\'ll upload THEIR photos ;)'
+      title: 'Stock Photos',
+      text: 'These are examples.<br>You will upload THEIR photo later.',
+      // translateX(25%): מזיז ימינה לכיוון התמונה הימנית-עליונה
+      // אם זה עדיין לא ממורכז בול, תשחק עם המספר 25 (נסה 20 או 30)
+      style: 'transform: translateX(25%)'
     }
   };
   
   const config = tooltips[type];
   if (!config) return;
 
-  // 5. יצירת ה-HTML (ללא אצבע, עם צ'ופצ'יק)
   const backdrop = document.createElement('div');
   backdrop.className = 'tooltip-backdrop';
+  
+  // הזרקת ה-STYLE המיוחד לכל טולטיפ
   backdrop.innerHTML = `
-    <div class="tooltip-container">
+    <div class="tooltip-container" style="${config.style || ''}">
+      <div class="finger-point">👇</div>
       <div class="preview-tooltip">
-        ${config.title ? `<h3 class="tooltip-title">${config.title}</h3>` : ''}
+        <h3 class="tooltip-title">${config.title}</h3>
         <p class="tooltip-text">${config.text}</p>
         <button class="tooltip-btn">Got it</button>
       </div>
@@ -1587,25 +1587,8 @@ function showPreviewTooltip(type, targetSelector) {
   `;
   
   document.body.appendChild(backdrop);
+  requestAnimationFrame(() => backdrop.classList.add('show'));
   
-  // 6. 🎯 מיקום הטולטיפ מעל האלמנט (זה הקסם!)
-  requestAnimationFrame(() => {
-    const rect = targetEl.getBoundingClientRect();
-    const container = backdrop.querySelector('.tooltip-container');
-    
-    // מחשב איפה למקם את הטולטיפ - 100px מעל האלמנט
-    const top = rect.top - 100;
-    const left = rect.left + (rect.width / 2);
-    
-    container.style.position = 'fixed';
-    container.style.top = top + 'px';
-    container.style.left = left + 'px';
-    container.style.transform = 'translateX(-50%)'; // ממרכז אופקית
-    
-    backdrop.classList.add('show');
-  });
-  
-  // 7. סגירה
   function dismiss() {
     backdrop.classList.remove('show');
     setTimeout(() => backdrop.remove(), 400);

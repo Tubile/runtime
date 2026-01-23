@@ -193,12 +193,6 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
-  /* קלאס מיוחד שמזיז את הצ'ופצ'יק שמאלה בשביל ה-FRIEND */
-.preview-tooltip.arrow-left::after {
-  left: 30px !important;    /* מצמיד לשמאל */
-  transform: none !important; /* מבטל את המירכוז */
-}
-
 .tooltip-title { 
   color: #fff; 
   font-size: 15px; 
@@ -1594,35 +1588,33 @@ function showPreviewTooltip(type, targetSelector) {
   
   document.body.appendChild(backdrop);
   
-  // 6. 🎯 מיקום הטולטיפ - הקוד המתוקן
+  // 6. 🎯 מיקום הטולטיפ מעל האלמנט
   requestAnimationFrame(() => {
-    // השורות האלו חזרו כדי למנוע מסך לבן:
+    // השורות שהיו חסרות וחייבים אותן:
     const rect = targetEl.getBoundingClientRect();
     const container = backdrop.querySelector('.tooltip-container');
-    const tooltipBox = container.querySelector('.preview-tooltip');
 
-    // ברירת מחדל
+    // מחשב איפה למקם את הטולטיפ - ברירת מחדל 100px מעל
     let top = rect.top - 100;
-    let left = rect.left + (rect.width / 2); 
+    
+    // --- שינוי כירורגי למיקום (גרסה 2 - מתוקנת ומדויקת) ---
+    let left = rect.left + (rect.width / 2); // ברירת מחדל: אמצע
 
     if (type === 'name') {
-      // --- תיקון FRIEND ---
-      // לא נוגעים במיקום הבועה (משאירים באמצע)
-      // אבל מוסיפים קלאס שיזיז רק את הצ'ופצ'יק שמאלה (ראה CSS שהוספנו)
-      tooltipBox.classList.add('arrow-left');
+      // Friend: יותר שמאלה ולמעלה
+      left = rect.left + 10; 
+      top = rect.top - 130;
     } 
     else if (type === 'captcha-images') {
-      // --- תיקון CAPTCHA ---
-      // ביקשת עוד שמאלה? קיבלת.
-      // במקום 100, אנחנו מורידים 145 פיקסלים מצד ימין.
-      left = rect.right - 145; 
+      // Captcha: משיכה חזקה שמאלה כדי לשבת על התמונה
+      left = rect.right - 100; 
     }
+    // ----------------------------
     
-    // החלת המיקומים
     container.style.position = 'fixed';
     container.style.top = top + 'px';
     container.style.left = left + 'px';
-    container.style.transform = 'translateX(-50%)'; 
+    container.style.transform = 'translateX(-50%)'; // ממרכז אופקית
     
     backdrop.classList.add('show');
   });

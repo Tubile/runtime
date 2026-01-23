@@ -1610,9 +1610,15 @@ function showPreviewTooltip(type, targetSelector) {
       // אנחנו לא מזיזים את ה-LEFT (משאירים את הבועה באמצע שזה יפה)
       // אנחנו רק מרימים אותה למעלה ומזיזים את החץ שמאלה:
       left = rect.left + 25;
-      top = rect.top - 130;
-      if (bubble) bubble.classList.add('fix-arrow');
-    } 
+      top = rect.top - 120;
+      
+      if (bubble) {
+    bubble.classList.add('fix-arrow');
+    // --- תוספת LTR נקודתית ---
+    bubble.style.direction = 'ltr'; 
+    bubble.style.textAlign = 'left'; 
+  }
+}
     else if (type === 'captcha-images') {
       // --- תיקון CAPTCHA (מסך 2) ---
       // ביקשת עוד שמאלה? בבקשה.

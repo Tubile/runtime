@@ -142,46 +142,55 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
 .react-btn-sec { background: transparent; color: #64748b; border: none; padding: 10px; font-size: 14px; margin-top: 4px; }
 .react-btn-share { background: #25D366; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); } 
 .hidden { display: none !important; }
- /* ===== PREVIEW FINGER TIP SYSTEM (REDESIGNED) ===== */
+ /* ===== PREVIEW FINGER TIP SYSTEM (CONTEXTUAL + POINTER) ===== */
 .tooltip-backdrop {
   position: fixed; inset: 0; z-index: 10000;
-  /* רקע מינימלי - כמעט שקוף */
-  background: rgba(0, 0, 0, 0.08); 
+  background: rgba(0, 0, 0, 0.06); 
   backdrop-filter: blur(0.5px); 
   -webkit-backdrop-filter: blur(0.5px);
   opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
   
-  /* מיקום: למעלה, קרוב לכותרת */
+  /* NO padding-top - מיקום ייעשה דינמית ב-JS */
   display: flex; flex-direction: column; align-items: center; 
-  padding-top: clamp(80px, 12vh, 120px); /* ממוקם קרוב לכותרת */
 }
 .tooltip-backdrop.show { opacity: 1; pointer-events: auto; }
 
-/* הקונטיינר של האצבע וההודעה */
+/* הקונטיינר - עכשיו יקבל מיקום מדויק */
 .tooltip-container {
   display: flex; flex-direction: column; align-items: center;
-  animation: tooltipFadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1);
+  animation: tooltipFloat 2.5s ease-in-out infinite;
 }
 
-/* האצבע המצביעה - קטנה ועדינה */
+/* האצבע - מוסרים לגמרי */
 .finger-point {
-  font-size: 32px; /* קטן יותר */
-  margin-bottom: -6px; /* חפיפה מינימלית */
-  z-index: 2;
-  opacity: 0.85;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
-  animation: fingerPulse 2s ease-in-out infinite;
+  display: none;
 }
 
-/* התיבה עצמה - קומפקטית וממוקדת */
+/* התיבה עצמה - עם צ'ופצ'יק למטה */
 .preview-tooltip {
+  position: relative;
   background: rgba(30, 41, 59, 0.96); 
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
   padding: 10px 14px 12px 14px;
-  width: min(220px, 70vw); /* יותר צר */
+  width: min(220px, 70vw);
   text-align: center;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+}
+
+/* ✨ הצ'ופצ'יק (החץ למטה) */
+.preview-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 8px solid rgba(30, 41, 59, 0.96);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
 .tooltip-title { 
@@ -217,14 +226,10 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
   border-color: rgba(96,165,250,0.4);
 }
 
-/* אנימציות עדינות */
-@keyframes fingerPulse { 
-  0%, 100% { transform: translateY(0); opacity: 0.85; } 
-  50% { transform: translateY(-8px); opacity: 1; } 
-}
-@keyframes tooltipFadeIn { 
-  from { opacity: 0; transform: translateY(10px) scale(0.96); } 
-  to { opacity: 1; transform: translateY(0) scale(1); } 
+/* אנימציית ריחוף עדינה */
+@keyframes tooltipFloat { 
+  0%, 100% { transform: translateY(0); } 
+  50% { transform: translateY(-8px); } 
 }
 </style>
 
@@ -1549,10 +1554,14 @@ function showPreviewTooltip(type, targetSelector) {
   // 2. מניעת כפילויות רגעיות
   if (document.querySelector('.tooltip-backdrop')) return;
   
-  // 3. תוכן
+  // 3. מציאת האלמנט שעליו אנחנו מדברים
+  const targetEl = document.querySelector(targetSelector);
+  if (!targetEl) return;
+  
+  // 4. תוכן
   const tooltips = {
     'name': {
-      title: '',  // ריק - אין צורך בכותרת
+      title: '',
       text: 'In the finalize step,<br>you\'ll change "friend" to their name'
     },
     'captcha-images': {
@@ -1564,14 +1573,13 @@ function showPreviewTooltip(type, targetSelector) {
   const config = tooltips[type];
   if (!config) return;
 
-  // 4. יצירת ה-HTML (כולל האצבע!)
+  // 5. יצירת ה-HTML (ללא אצבע, עם צ'ופצ'יק)
   const backdrop = document.createElement('div');
   backdrop.className = 'tooltip-backdrop';
   backdrop.innerHTML = `
     <div class="tooltip-container">
-      <div class="finger-point">👇</div>
       <div class="preview-tooltip">
-        <h3 class="tooltip-title">${config.title}</h3>
+        ${config.title ? `<h3 class="tooltip-title">${config.title}</h3>` : ''}
         <p class="tooltip-text">${config.text}</p>
         <button class="tooltip-btn">Got it</button>
       </div>
@@ -1580,10 +1588,24 @@ function showPreviewTooltip(type, targetSelector) {
   
   document.body.appendChild(backdrop);
   
-  // 5. אנימציית כניסה
-  requestAnimationFrame(() => backdrop.classList.add('show'));
+  // 6. 🎯 מיקום הטולטיפ מעל האלמנט (זה הקסם!)
+  requestAnimationFrame(() => {
+    const rect = targetEl.getBoundingClientRect();
+    const container = backdrop.querySelector('.tooltip-container');
+    
+    // מחשב איפה למקם את הטולטיפ - 100px מעל האלמנט
+    const top = rect.top - 100;
+    const left = rect.left + (rect.width / 2);
+    
+    container.style.position = 'fixed';
+    container.style.top = top + 'px';
+    container.style.left = left + 'px';
+    container.style.transform = 'translateX(-50%)'; // ממרכז אופקית
+    
+    backdrop.classList.add('show');
+  });
   
-  // 6. סגירה
+  // 7. סגירה
   function dismiss() {
     backdrop.classList.remove('show');
     setTimeout(() => backdrop.remove(), 400);

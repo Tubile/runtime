@@ -173,7 +173,7 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
   padding: 10px 14px 12px 14px;
-  width: 200px;
+  width: min(220px, 70vw);
   text-align: center;
   box-shadow: 0 12px 32px rgba(0,0,0,0.35);
 }
@@ -1546,40 +1546,40 @@ Send ${senderText} a 5 seconds reaction video, before you grab the gift.
     tryReactionFlow(fallbackUrl);
   };
 }
-  // ===== PREVIEW FINGER SYSTEM (CORRECTED TEXT & POSITION) =====
+  // ===== PREVIEW FINGER SYSTEM (Logic) =====
 function showPreviewTooltip(type, targetSelector) {
+  // 1. הגנה: מציג רק ב-Preview
   if (typeof PREV === 'undefined' || !PREV) return;
+  
+  // 2. מניעת כפילויות רגעיות
   if (document.querySelector('.tooltip-backdrop')) return;
   
+  // 3. מציאת האלמנט שעליו אנחנו מדברים
+  const targetEl = document.querySelector(targetSelector);
+  if (!targetEl) return;
+  
+  // 4. תוכן
   const tooltips = {
     'name': {
-      // 1. הטקסט המקורי חזר:
-      title: 'Preview Mode',
-      text: '"Friend" is a placeholder. In the Finalize step, you will replace it with their real name.<br><br>This is what <b>they</b> will see first!',
-      // 2. הזזה שמאלה (לכיוון המילה Friend):
-      style: 'transform: translateX(-110px)' 
+      title: '',
+      text: 'In the finalize step,<br>you\'ll change "friend" to their name'
     },
     'captcha-images': {
-      // 1. הטקסט המקורי חזר:
-      title: 'Placeholder Images',
-      text: 'These are just stock photos. In the Finalize step, you will upload <b>THEIR</b> photo.<br><br>Imagine their reaction... 😂',
-      // 2. הזזה ימינה (לכיוון התמונה בפינה):
-      style: 'transform: translateX(100px)'
+      title: '',
+      text: 'In the finalize step,<br>you\'ll upload THEIR photos ;)'
     }
   };
   
   const config = tooltips[type];
   if (!config) return;
 
+  // 5. יצירת ה-HTML (ללא אצבע, עם צ'ופצ'יק)
   const backdrop = document.createElement('div');
   backdrop.className = 'tooltip-backdrop';
-  
-  // הזרקת המיקום (style) לקונטיינר
   backdrop.innerHTML = `
-    <div class="tooltip-container" style="${config.style || ''}">
-      <div class="finger-point">👇</div>
+    <div class="tooltip-container">
       <div class="preview-tooltip">
-        <h3 class="tooltip-title">${config.title}</h3>
+        ${config.title ? `<h3 class="tooltip-title">${config.title}</h3>` : ''}
         <p class="tooltip-text">${config.text}</p>
         <button class="tooltip-btn">Got it</button>
       </div>
@@ -1587,8 +1587,25 @@ function showPreviewTooltip(type, targetSelector) {
   `;
   
   document.body.appendChild(backdrop);
-  requestAnimationFrame(() => backdrop.classList.add('show'));
   
+  // 6. 🎯 מיקום הטולטיפ מעל האלמנט (זה הקסם!)
+  requestAnimationFrame(() => {
+    const rect = targetEl.getBoundingClientRect();
+    const container = backdrop.querySelector('.tooltip-container');
+    
+    // מחשב איפה למקם את הטולטיפ - 100px מעל האלמנט
+    const top = rect.top - 100;
+    const left = rect.left + (rect.width / 2);
+    
+    container.style.position = 'fixed';
+    container.style.top = top + 'px';
+    container.style.left = left + 'px';
+    container.style.transform = 'translateX(-50%)'; // ממרכז אופקית
+    
+    backdrop.classList.add('show');
+  });
+  
+  // 7. סגירה
   function dismiss() {
     backdrop.classList.remove('show');
     setTimeout(() => backdrop.remove(), 400);

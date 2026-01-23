@@ -173,7 +173,7 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
   padding: 10px 14px 12px 14px;
-  width: min(220px, 70vw);
+  width: 160px;
   text-align: center;
   box-shadow: 0 12px 32px rgba(0,0,0,0.35);
 }
@@ -1594,8 +1594,20 @@ function showPreviewTooltip(type, targetSelector) {
     const container = backdrop.querySelector('.tooltip-container');
     
     // מחשב איפה למקם את הטולטיפ - 100px מעל האלמנט
-    const top = rect.top - 100;
-    const left = rect.left + (rect.width / 2);
+   // מחשב איפה למקם את הטולטיפ - 100px מעל האלמנט
+ const top = rect.top - 100;
+
+ // --- שינוי כירורגי למיקום ---
+ let left = rect.left + (rect.width / 2); // ברירת מחדל: אמצע
+
+ if (type === 'name') {
+   // מזיז חזק שמאלה כדי להיות מעל המילה Friend
+   left = rect.left + 40; 
+ } 
+ else if (type === 'captcha-images') {
+   // מזיז ימינה כדי להיות מעל התמונה הימנית העליונה
+   left = rect.right - 50; 
+ }
     
     container.style.position = 'fixed';
     container.style.top = top + 'px';

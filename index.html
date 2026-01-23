@@ -173,7 +173,7 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
   padding: 10px 14px 12px 14px;
-  width: min(210px, 70vw);
+  width: 200px;
   text-align: center;
   box-shadow: 0 12px 32px rgba(0,0,0,0.35);
 }
@@ -1546,25 +1546,25 @@ Send ${senderText} a 5 seconds reaction video, before you grab the gift.
     tryReactionFlow(fallbackUrl);
   };
 }
-  // ===== PREVIEW FINGER SYSTEM (SURGICAL FIX) =====
+  // ===== PREVIEW FINGER SYSTEM (CORRECTED TEXT & POSITION) =====
 function showPreviewTooltip(type, targetSelector) {
   if (typeof PREV === 'undefined' || !PREV) return;
   if (document.querySelector('.tooltip-backdrop')) return;
   
-  // הגדרות תוכן + מיקום
   const tooltips = {
     'name': {
+      // 1. הטקסט המקורי חזר:
       title: 'Preview Mode',
-      text: '"Friend" is just a placeholder.<br>You\'ll change it later!',
-      // translateX(-40%): מזיז חזק שמאלה לכיוון המילה Friend
-      style: 'transform: translateX(-40%)' 
+      text: '"Friend" is a placeholder. In the Finalize step, you will replace it with their real name.<br><br>This is what <b>they</b> will see first!',
+      // 2. הזזה שמאלה (לכיוון המילה Friend):
+      style: 'transform: translateX(-110px)' 
     },
     'captcha-images': {
-      title: 'Stock Photos',
-      text: 'These are examples.<br>You will upload THEIR photo later.',
-      // translateX(25%): מזיז ימינה לכיוון התמונה הימנית-עליונה
-      // אם זה עדיין לא ממורכז בול, תשחק עם המספר 25 (נסה 20 או 30)
-      style: 'transform: translateX(25%)'
+      // 1. הטקסט המקורי חזר:
+      title: 'Placeholder Images',
+      text: 'These are just stock photos. In the Finalize step, you will upload <b>THEIR</b> photo.<br><br>Imagine their reaction... 😂',
+      // 2. הזזה ימינה (לכיוון התמונה בפינה):
+      style: 'transform: translateX(100px)'
     }
   };
   
@@ -1574,7 +1574,7 @@ function showPreviewTooltip(type, targetSelector) {
   const backdrop = document.createElement('div');
   backdrop.className = 'tooltip-backdrop';
   
-  // הזרקת ה-STYLE המיוחד לכל טולטיפ
+  // הזרקת המיקום (style) לקונטיינר
   backdrop.innerHTML = `
     <div class="tooltip-container" style="${config.style || ''}">
       <div class="finger-point">👇</div>

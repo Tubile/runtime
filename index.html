@@ -1742,11 +1742,12 @@ function showKfBadge() {
 
     /* האצבע המרחפת (ללא שינוי) */
     .bridge-arrow-container {
-      position: absolute; top: -70px; right: 20px;
-      display: flex; flex-direction: column; align-items: center;
-      animation: floatUpStraight 1.5s ease-in-out infinite;
-      pointer-events: none;
-    }
+  position: absolute; top: -70px; right: 20px;
+  display: flex; flex-direction: column; align-items: center;
+  animation: floatUpStraight 1.5s ease-in-out infinite;
+  pointer-events: auto; /* עכשיו זה לחיץ */
+  cursor: pointer;      /* מראה יד בלחיצה */
+}
     .bridge-arrow-text {
       background: #10b981; color: #062d24; font-weight: 800; font-size: 13px;
       padding: 4px 10px; border-radius: 99px; margin-bottom: 6px;
@@ -1813,10 +1814,10 @@ function showKfBadge() {
     const div = document.createElement('div');
     div.className = 'bridge-overlay';
     
-    // כאן בנינו את הכרטיס בלי הכפתור הנפרד, המחיר הוא הכפתור!
+    // כאן בנינו את הכרטיס עם העיצוב החדש לכפתור + ID לכפתור המרחף
     div.innerHTML = `
       <div class="bridge-card">
-        <div class="bridge-arrow-container">
+        <div id="bridge-arrow-btn" class="bridge-arrow-container">
           <div class="bridge-arrow-text">Click to Finalize!</div>
           <div class="bridge-arrow-icon">👇</div>
         </div>
@@ -1827,7 +1828,12 @@ function showKfBadge() {
         </p>
         
         <button id="green-price-btn" class="bridge-price">
-          <span class="bridge-old">$9.95</span> $5.95 Today
+          <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2">
+            <span style="font-size:19px; margin-bottom:2px">Finalize Prank</span>
+            <span style="font-size:13px; font-weight:600; opacity:0.9">
+               <span class="bridge-old" style="font-size:1em">$9.95</span> $5.95 Today
+            </span>
+          </div>
         </button>
       </div>
     `;
@@ -1835,14 +1841,18 @@ function showKfBadge() {
     requestAnimationFrame(() => div.classList.add('show'));
     try { window.sfx('whoosh'); } catch(e){}
 
-// --- חיבור לוגיקת הלחיצה (מעודכן לכפתור המחיר) ---
+    // --- חיבור לוגיקת הלחיצה (לשני הכפתורים) ---
+    const handleFinalize = function() {
+      console.log("Finalize clicked");
+      window.parent.postMessage('FINALIZE_PRANK_CLICKED', '*');
+    };
+
     const priceBtn = document.getElementById('green-price-btn');
-    if (priceBtn) {
-      priceBtn.onclick = function() {
-        console.log("Price button clicked");
-        window.parent.postMessage('FINALIZE_PRANK_CLICKED', '*');
-      };
-    }
+    const arrowBtn = document.getElementById('bridge-arrow-btn');
+
+    if (priceBtn) priceBtn.onclick = handleFinalize;
+    if (arrowBtn) arrowBtn.onclick = handleFinalize;
+
   }, 1500);
 }
 

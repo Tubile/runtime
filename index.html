@@ -1384,6 +1384,7 @@ body.theme-neon .phone {
 (function(){
 const qs = new URLSearchParams(location.search);
 // --- Start of URL Fixer ---
+  
   // --- MOOD SETTER: Roleplay Intro (Preview Only) ---
 const _isPrev = (qs.get('preview')||'0').trim()==='1';
 if (_isPrev) {
@@ -1392,27 +1393,21 @@ if (_isPrev) {
    setTimeout(() => {
        const phoneEl = document.getElementById('phone');
        if(!phoneEl) return;
-
        const moodDiv = document.createElement('div');
        moodDiv.className = 'mood-overlay';
        moodDiv.innerHTML = `
            <div class="mood-icon">🎭</div>
-           <h2 class="mood-title">Roleplay Mode: On</h2>
+           <h2 class="mood-title">For the best experience...</h2>
+           <p class="mood-hero">imagine you're the victim.</p>
            <p class="mood-text">
-               For the best experience, <br><b>imagine you are the victim.</b>
-               <br><br>
-               You just received a link, and you are 100% sure it's a real Gift Card...
-               <br><br>
-               Are you ready?
+               You just received a gift link, and you're 100% sure it's a REAL gift card... ready?
            </p>
            <button class="mood-btn">Yes, I'm ready!</button>
        `;
-
        // לחיצה מעלימה את המסך וחושפת את המתיחה
        moodDiv.querySelector('button').onclick = function() {
            moodDiv.classList.add('fade-out');
            setTimeout(() => moodDiv.remove(), 400);
-
            // אופציונלי: להפעיל סאונד קליק קטן
            try { 
              const audio = new Audio('https://tubile.github.io/kefpo-sfx/click.mp3');
@@ -1420,7 +1415,6 @@ if (_isPrev) {
              audio.play().catch(()=>{});
            } catch(e){}
        };
-
        phoneEl.appendChild(moodDiv);
    }, 50); // השהייה מזערית לוודא שה-DOM קיים
 }

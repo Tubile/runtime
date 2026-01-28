@@ -236,33 +236,92 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
   0%, 100% { transform: translateY(0); } 
   50% { transform: translateY(-8px); } 
 }
-  /* === PREVIEW MOOD SETTER (ROLEPLAY MODE) === */
+  /* === PREVIEW MOOD SETTER (PREMIUM CINEMATIC) === */
 .mood-overlay {
-  position: absolute; inset: 0; z-index: 20000; /* הכי גבוה שיש */
-  background: #0b1020; /* אותו רקע כמו האפליקציה */
+  position: absolute; inset: 0; z-index: 20000;
+  background: #0b1020;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 32px; text-align: center;
-  animation: moodFadeIn 0.4s ease-out;
+  padding: 40px 32px; text-align: center;
+  animation: moodFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .mood-overlay.fade-out { opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
 
-.mood-icon { font-size: 48px; margin-bottom: 20px; animation: moodFloat 3s ease-in-out infinite; }
-.mood-title { font-size: 24px; font-weight: 800; color: #fff; margin: 0 0 16px 0; line-height: 1.2; }
-.mood-text { font-size: 16px; line-height: 1.6; color: #9aa3b2; margin: 0 0 32px 0; max-width: 280px; }
-.mood-text b { color: #fff; font-weight: 700; }
-
-.mood-btn {
-  background: linear-gradient(90deg, #10b981, #059669);
-  color: #fff; border: none; padding: 16px 32px; width: 100%; max-width: 260px;
-  border-radius: 16px; font-size: 18px; font-weight: 700;
-  cursor: pointer; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
-  transition: transform 0.2s, box-shadow 0.2s;
+/* האייקון */
+.mood-icon { 
+  font-size: 52px; margin-bottom: 24px; 
+  filter: drop-shadow(0 0 20px rgba(16,185,129,0.2));
+  animation: moodFloat 3s ease-in-out infinite; 
 }
-.mood-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4); }
-.mood-btn:active { transform: scale(0.96); }
 
-@keyframes moodFadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-@keyframes moodFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+/* הכותרת הקטנה למעלה */
+.mood-eyebrow {
+  font-size: 13px; text-transform: uppercase; letter-spacing: 2px;
+  color: #64748b; font-weight: 700; margin-bottom: 12px;
+}
+
+/* הטקסט הראשי - Hero */
+.mood-hero {
+  font-size: 26px; font-weight: 800; color: #fff; margin: 0 0 24px 0; 
+  line-height: 1.2; letter-spacing: -0.5px;
+}
+
+/* אפקט המילה VICTIM - קו תחתון זוהר */
+.victim-word {
+  position: relative; display: inline-block;
+  text-shadow: 0 0 15px rgba(255,255,255,0.1);
+}
+.victim-word::after {
+  content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px;
+  background: #10b981; box-shadow: 0 0 12px #10b981;
+  border-radius: 2px;
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+/* טקסט ההסבר */
+.mood-text { 
+  font-size: 16px; line-height: 1.6; color: #9aa3b2; 
+  margin: 0 0 40px 0; max-width: 290px; font-weight: 400;
+}
+
+/* המילה READY? - ירוקה ומהבהבת בעדינות */
+.ready-word {
+  display: block; margin-top: 16px;
+  font-weight: 700; color: #10b981; font-size: 18px;
+  animation: softBlink 2s infinite ease-in-out;
+}
+
+/* הכפתור - עיצוב Deep Layer */
+.mood-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff; border: none; padding: 18px 36px; width: 100%; max-width: 260px;
+  border-radius: 18px; font-size: 18px; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.5px;
+  /* צל תלת-שכבתי לעומק */
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 10px 15px -3px rgba(16, 185, 129, 0.2),
+    0 0 30px rgba(16, 185, 129, 0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative; overflow: hidden;
+}
+.mood-btn::before { /* ברק עדין למעלה */
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+}
+.mood-btn:hover { 
+  transform: translateY(-3px); 
+  box-shadow: 
+    0 10px 20px -2px rgba(0, 0, 0, 0.2),
+    0 20px 25px -5px rgba(16, 185, 129, 0.3),
+    0 0 40px rgba(16, 185, 129, 0.2);
+}
+.mood-btn:active { transform: scale(0.98) translateY(0); }
+
+/* Keyframes לאנימציות */
+@keyframes moodFadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes moodFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes pulseGlow { 0%,100%{opacity: 0.6; box-shadow: 0 0 8px #10b981;} 50%{opacity: 1; box-shadow: 0 0 16px #10b981;} }
+@keyframes softBlink { 0%,100%{opacity: 1;} 50%{opacity: 0.7;} }
 </style>
 
 <!-- Infinite UX extra classes -->
@@ -1397,12 +1456,20 @@ if (_isPrev) {
        moodDiv.className = 'mood-overlay';
        moodDiv.innerHTML = `
            <div class="mood-icon">🎭</div>
-           <h2 class="mood-title">For the best experience...</h2>
-           <p class="mood-hero">imagine you're the victim.</p>
+           
+           <div class="mood-eyebrow">For the best experience</div>
+           
+           <h2 class="mood-hero">
+             Imagine you are the <br>
+             <span class="victim-word">VICTIM</span>
+           </h2>
+           
            <p class="mood-text">
-               You just received a gift link, and you're 100% sure it's a REAL gift card... ready?
+               You just received a gift link, and you are 100% sure it is a REAL gift card...
+               <span class="ready-word">Are you ready?</span>
            </p>
-           <button class="mood-btn">Yes, I'm ready!</button>
+           
+           <button class="mood-btn">Yes, Let's Start</button>
        `;
        // לחיצה מעלימה את המסך וחושפת את המתיחה
        moodDiv.querySelector('button').onclick = function() {

@@ -1446,7 +1446,10 @@ const qs = new URLSearchParams(location.search);
   
   // --- MOOD SETTER: Roleplay Intro (Preview Only) ---
 const _isPrev = (qs.get('preview')||'0').trim()==='1';
-if (_isPrev) {
+const _isEdit = (qs.get('edit')||'0').trim()==='1'; // זיהוי מצב עריכה
+
+// מפעיל את ה-MOOD רק אם זה פריביו רגיל ו-לא- מצב עריכה
+if (_isPrev && !_isEdit) {
    // אנחנו יוצרים את האלמנט ומחברים אותו ל-#phone
    // זה יכסה את המתיחה שנטענת ברקע
    setTimeout(() => {
@@ -1680,8 +1683,9 @@ Send ${senderText} a 5 seconds reaction video, before you grab the gift.
 }
   // ===== PREVIEW FINGER SYSTEM (Logic) =====
 function showPreviewTooltip(type, targetSelector) {
-  // 1. הגנה: מציג רק ב-Preview
+  // 1. הגנה: מציג רק ב-Preview (ולא באדיטור)
   if (typeof PREV === 'undefined' || !PREV) return;
+  if ((new URLSearchParams(location.search).get('edit')||'0') === '1') return; // חסימה לאדיטור
   
   // 2. מניעת כפילויות רגעיות
   if (document.querySelector('.tooltip-backdrop')) return;

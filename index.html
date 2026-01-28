@@ -236,6 +236,33 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
   0%, 100% { transform: translateY(0); } 
   50% { transform: translateY(-8px); } 
 }
+  /* === PREVIEW MOOD SETTER (ROLEPLAY MODE) === */
+.mood-overlay {
+  position: absolute; inset: 0; z-index: 20000; /* הכי גבוה שיש */
+  background: #0b1020; /* אותו רקע כמו האפליקציה */
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 32px; text-align: center;
+  animation: moodFadeIn 0.4s ease-out;
+}
+.mood-overlay.fade-out { opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+
+.mood-icon { font-size: 48px; margin-bottom: 20px; animation: moodFloat 3s ease-in-out infinite; }
+.mood-title { font-size: 24px; font-weight: 800; color: #fff; margin: 0 0 16px 0; line-height: 1.2; }
+.mood-text { font-size: 16px; line-height: 1.6; color: #9aa3b2; margin: 0 0 32px 0; max-width: 280px; }
+.mood-text b { color: #fff; font-weight: 700; }
+
+.mood-btn {
+  background: linear-gradient(90deg, #10b981, #059669);
+  color: #fff; border: none; padding: 16px 32px; width: 100%; max-width: 260px;
+  border-radius: 16px; font-size: 18px; font-weight: 700;
+  cursor: pointer; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.mood-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4); }
+.mood-btn:active { transform: scale(0.96); }
+
+@keyframes moodFadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+@keyframes moodFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
 </style>
 
 <!-- Infinite UX extra classes -->
@@ -1357,6 +1384,47 @@ body.theme-neon .phone {
 (function(){
 const qs = new URLSearchParams(location.search);
 // --- Start of URL Fixer ---
+  // --- MOOD SETTER: Roleplay Intro (Preview Only) ---
+const _isPrev = (qs.get('preview')||'0').trim()==='1';
+if (_isPrev) {
+   // אנחנו יוצרים את האלמנט ומחברים אותו ל-#phone
+   // זה יכסה את המתיחה שנטענת ברקע
+   setTimeout(() => {
+       const phoneEl = document.getElementById('phone');
+       if(!phoneEl) return;
+
+       const moodDiv = document.createElement('div');
+       moodDiv.className = 'mood-overlay';
+       moodDiv.innerHTML = `
+           <div class="mood-icon">🎭</div>
+           <h2 class="mood-title">Roleplay Mode: On</h2>
+           <p class="mood-text">
+               For the best experience, <br><b>imagine you are the victim.</b>
+               <br><br>
+               You just received a link, and you are 100% sure it's a real Gift Card...
+               <br><br>
+               Are you ready?
+           </p>
+           <button class="mood-btn">Yes, I'm ready!</button>
+       `;
+
+       // לחיצה מעלימה את המסך וחושפת את המתיחה
+       moodDiv.querySelector('button').onclick = function() {
+           moodDiv.classList.add('fade-out');
+           setTimeout(() => moodDiv.remove(), 400);
+
+           // אופציונלי: להפעיל סאונד קליק קטן
+           try { 
+             const audio = new Audio('https://tubile.github.io/kefpo-sfx/click.mp3');
+             audio.volume = 0.5;
+             audio.play().catch(()=>{});
+           } catch(e){}
+       };
+
+       phoneEl.appendChild(moodDiv);
+   }, 50); // השהייה מזערית לוודא שה-DOM קיים
+}
+// --------------------------------------------------
   function normalizeUrl(url, fallback) {
     var c = (url || '').trim();
     if (!c && fallback) c = fallback; 

@@ -2802,7 +2802,6 @@ else { document.body.className = ''; }
     const btn = document.getElementById('nqOpen');
     btn?.addEventListener('click', ()=>{
       if(PREV) return;
-      try{sfx('confirm')}catch(_){}
       tryReactionFlow(GIFT);
     });
   }
@@ -2968,7 +2967,7 @@ function shake(){
         <div class="sh-sub" style="font-size:12px">no data collected</div>
       </div>
     `;
-    document.getElementById('shStart')?.addEventListener('click', ()=>{ sfx('confirm'); runAttempt(); }, { once:true });
+    document.getElementById('shStart')?.addEventListener('click', ()=>{ runAttempt(); }, { once:true });
     setTimeout(() => showPreviewTooltip('name', '.sh-title'), 2000);
   }
 
@@ -3113,7 +3112,6 @@ function shake(){
     confettiBurst(document.getElementById('shConfetti2'));
     document.getElementById('shOpen')?.addEventListener('click', ()=>{
       if(PREV) return;
-      sfx('confirm');
       tryReactionFlow(GIFT);
     });
   }
@@ -3272,7 +3270,7 @@ var copy = {
 '<button id="bv-start" class="btn bv brand">'+copy.introBtn+'</button>'+
         '<div class="bv-sub" style="font-size:12px">no data collected</div>'+
       '</div>';
-    document.getElementById('bv-start').addEventListener('click', function(){ play('confirm'); screenCount(1); });
+    document.getElementById('bv-start').addEventListener('click', function(){ screenCount(1); });
     setTimeout(() => showPreviewTooltip('name', '.bv-title'), 2000);
   }
 
@@ -3425,8 +3423,7 @@ var copy = {
         }).catch(function(){ /* נשאר עם fallback */ });
       }
     }catch(_){}
-
-    play('confirm');
+    
     loop();
 
     // סיום לוגי: אין שינוי לפלואו (ניסיון 1 → שגיאה; ניסיון 2 → הצלחה)

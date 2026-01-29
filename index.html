@@ -250,7 +250,8 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
 .mood-icon { 
   font-size: 52px; margin-bottom: 24px; 
   filter: drop-shadow(0 0 20px rgba(16,185,129,0.2));
-  animation: moodFloat 3s ease-in-out infinite; 
+  opacity: 0;
+  animation: moodFloat 3s ease-in-out infinite, fadeInStagger 0.6s ease-out 0.1s forwards; 
 }
 
 /* הכותרת הקטנה למעלה */
@@ -263,6 +264,8 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
 .mood-hero {
   font-size: 26px; font-weight: 800; color: #fff; margin: 0 0 24px 0; 
   line-height: 1.2; letter-spacing: -0.5px;
+  opacity: 0;
+  animation: fadeInStagger 0.6s ease-out 0.4s forwards;
 }
 
 /* אפקט המילה VICTIM - קו תחתון זוהר */
@@ -281,6 +284,8 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
 .mood-text { 
   font-size: 16px; line-height: 1.6; color: #9aa3b2; 
   margin: 0 0 40px 0; max-width: 290px; font-weight: 400;
+  opacity: 0;
+  animation: fadeInStagger 0.6s ease-out 0.7s forwards;
 }
 
 /* המילה READY? - ירוקה ומהבהבת בעדינות */
@@ -296,6 +301,9 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
   color: #fff; border: none; padding: 18px 36px; width: 100%; max-width: 260px;
   border-radius: 18px; font-size: 18px; font-weight: 700;
   cursor: pointer; letter-spacing: 0.5px;
+  opacity: 0;
+  animation: fadeInStagger 0.6s ease-out 1.0s forwards;
+  
   /* צל תלת-שכבתי לעומק */
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -319,6 +327,10 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
 
 /* Keyframes לאנימציות */
 @keyframes moodFadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+  @keyframes fadeInStagger { 
+  from { opacity: 0; transform: translateY(10px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
 @keyframes moodFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
 @keyframes pulseGlow { 0%,100%{opacity: 0.6; box-shadow: 0 0 8px #10b981;} 50%{opacity: 1; box-shadow: 0 0 16px #10b981;} }
 @keyframes softBlink { 0%,100%{opacity: 1;} 50%{opacity: 0.7;} }

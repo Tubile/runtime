@@ -2143,9 +2143,7 @@ gridSub:     (qs.get('gridSub')    || `Select all images containing <b>Suspiciou
       <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
 
   <h1 class="cap-title">${copy.gridHeader}</h1>
-  <p class="cap-sub" style="margin-top:-10px; margin-bottom:20px; opacity:0.9; font-size: 1.1em;">${copy.gridSub}</p>
-
-  <p class="cap-sub" style="margin-top:-10px; margin-bottom:20px; opacity:0.9;">${copy.gridSub}</p>
+<p class="cap-sub" style="margin-top:-10px; margin-bottom:20px; opacity:0.9; font-size: 1.1em;">${copy.gridSub}</p>
 
   <div id="grid" class="cap-grid">
           ${Array.from({length:9}).map((_,i)=>tileHtml(i)).join('')}

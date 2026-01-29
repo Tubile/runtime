@@ -3140,6 +3140,9 @@ const showResult = () => {
           clearInterval(t);
           cnt.style.display='none';
           zone.style.display='grid';
+          // >>>>> השורה החדשה שצריך להוסיף כאן: <<<<<
+      document.querySelector('.sh-title').textContent = copy.sensorAcq;
+          
           startMotion(level => { if(bar) bar.style.width = level + '%'; });
           setTimeout(finishShake, 4000); // זמן ניעור רגיל
         } else {

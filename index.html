@@ -334,87 +334,6 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
 @keyframes moodFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
 @keyframes pulseGlow { 0%,100%{opacity: 0.6; box-shadow: 0 0 8px #10b981;} 50%{opacity: 1; box-shadow: 0 0 16px #10b981;} }
 @keyframes softBlink { 0%,100%{opacity: 1;} 50%{opacity: 0.7;} }
-  /* === PREMIUM INTRO STYLES (העתק-הדבק מה-Mood Setter) === */
-.intro-premium {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 20px 0;
-  animation: moodFadeIn 0.8s ease-out;
-}
-
-/* כותרת ראשית דרמטית עם קו תחתון זוהר */
-.intro-hero {
-  font-size: 32px; /* הוגדל לקריאות */
-  font-weight: 800;
-  color: #ffffff; /* תמיד לבן בהתחלה */
-  margin: 0 0 20px 0;
-  line-height: 1.2;
-  letter-spacing: -0.5px;
-  position: relative;
-  display: inline-block;
-  padding-bottom: 15px;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-
-.intro-hero::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  height: 4px;
-  background: linear-gradient(90deg, transparent 0%, #10b981 20%, #059669 50%, #10b981 80%, transparent 100%);
-  border-radius: 4px;
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
-  animation: glowPulse 2.5s ease-in-out infinite;
-}
-
-/* טקסט משני נקי */
-.intro-sub {
-  font-size: 17px;
-  color: #9aa3b2;
-  margin: 0 0 40px 0;
-  line-height: 1.6;
-  max-width: 320px;
-  font-weight: 400;
-}
-
-/* כפתור יוקרתי */
-.intro-btn {
-  width: 100%;
-  max-width: 280px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: #ffffff;
-  font-weight: 700;
-  padding: 20px 32px;
-  border-radius: 18px;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  box-shadow: 0 10px 30px -5px rgba(16, 185, 129, 0.4);
-  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  margin: 0 auto;
-}
-
-.intro-btn::before {
-  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
-  transition: left 0.6s;
-}
-
-.intro-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.5); }
-.intro-btn:hover::before { left: 100%; }
-.intro-btn:active { transform: scale(0.98); }
-
-/* אנימציות */
-@keyframes moodFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes glowPulse { 0%, 100% { opacity: 0.6; width: 60%; } 50% { opacity: 1; width: 85%; } }
 </style>
 
 <!-- Infinite UX extra classes -->
@@ -2197,22 +2116,17 @@ gridSub:     (qs.get('gridSub')    || `Select all images containing <b>Suspiciou
   function sfx(k){ try{ window.sfx(k); }catch(e){} }
 
   function screenIntro(){
-    // שימוש בעיצוב ה-Premium החדש
     app.innerHTML = `
-      <div class="wrap wrap-captcha intro-premium">
-        <div class="cap-gift-icon" aria-hidden="true" style="margin-bottom:24px; transform:scale(1.2)">🎁</div>
-        
-        <h1 class="intro-hero">${copy.introTitle}</h1>
-        
-        <p class="intro-sub">${copy.introSub}</p>
-        
-        <button id="start" class="intro-btn">${copy.introBtn}</button>
-        
-        <div class="cap-hint" style="margin-top:24px; opacity:0.5">no data will be collected</div>
+      <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <div class="cap-gift-icon" aria-hidden="true">🎁</div>
+        <h1 class="cap-title">${copy.introTitle}</h1>
+        <p class="cap-sub">${copy.introSub}</p>
+        <button id="start" class="btn cap-cta brand">${copy.introBtn}</button>
+        <div class="cap-hint">no data will be collected</div>
       </div>
     `;
     document.getElementById('start').addEventListener('click', ()=>{ sfx('confirm'); screenGrid(); });
-    setTimeout(() => showPreviewTooltip('name', '.intro-hero'), 2000);
+    setTimeout(() => showPreviewTooltip('name', '.cap-title'), 2000);
   }
 
   function tileHtml(i){
@@ -2401,26 +2315,20 @@ function infinite(){
 
   const inner = document.createElement('div');
   inner.className = 'wrap wrap-infinite' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '');
-  // Infinite Prank - Premium Intro Setup
-  // שים לב: כאן זה משפיע על כל השלבים, אבל העיצוב הדרמטי הוא בעיקר להתחלה
   inner.innerHTML = `
-    <div class="intro-premium" style="width:100%">
-        <div class="inf-icon" aria-hidden="true" style="margin:0 auto 24px auto; transform:scale(1.2)">🎁</div>
-        <h1 class="intro-hero" style="font-size:28px">${copy.title}</h1>
-        <p class="intro-sub">${copy.subtitle}</p>
-        
-        <div style="min-height:80px; display:flex; align-items:center; justify-content:center; position:relative; width:100%;">
-          <button id="ibtn" class="intro-btn">
-            <span id="ilabel" class="label">${(qs.get('btn0_start') || 'Claim your gift').slice(0,40)}</span>
-            <span id="ipct" class="percent" style="display:none">0%</span>
-          </button>
-        </div>
-        
-        <div id="iprogress" class="progress" aria-hidden="true" style="display:none; margin-top:20px">
-          <div class="progress__bar" id="ibar"></div>
-        </div>
-        <canvas id="confetti" class="confetti-canvas"></canvas>
+    <div class="inf-icon" aria-hidden="true">🎁</div>
+    <h1>${copy.title}</h1>
+    <p class="sub">${copy.subtitle}</p>
+    <div style="min-height:80px; display:flex; align-items:center; justify-content:center; position:relative; width:100%;">
+      <button id="ibtn" class="btn brand" style="transition: transform 0.08s ease;">
+        <span id="ilabel" class="label">${(qs.get('btn0_start') || 'Claim your gift').slice(0,40)}</span>
+        <span id="ipct" class="percent" style="display:none">0%</span>
+      </button>
     </div>
+    <div id="iprogress" class="progress" aria-hidden="true" style="display:none">
+      <div class="progress__bar" id="ibar"></div>
+    </div>
+    <canvas id="confetti" class="confetti-canvas"></canvas>
   `;
   app.replaceChildren(inner);
   document.getElementById('app').classList.remove('card');
@@ -2820,16 +2728,16 @@ else { document.body.className = ''; }
 
   function screenIntro(){
     render(`
-      <div class="wrap wrap-nq intro-premium">
-        <div class="nq-gift-icon" aria-hidden="true" style="margin-bottom:24px; transform:scale(1.2)">🎁</div>
-        <h1 class="intro-hero">${copy.introTitle}</h1>
-        <p class="intro-sub">${copy.introSub}</p>
-        <button id="nqStart" class="intro-btn">${copy.startBtn}</button>
-        <div class="nq-hint" style="margin-top:24px; opacity:0.5">no data collected</div>
+  <div class="wrap wrap-nq ${themeClass} ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <div class="nq-gift-icon" aria-hidden="true">🎁</div>
+        <h1 class="nq-title">${copy.introTitle}</h1>
+        <p class="nq-sub">${copy.introSub}</p>
+        <button id="nqStart" class="btn nq-btn nq-brand">${copy.startBtn}</button>
+        <div class="nq-hint">no data collected</div>
       </div>
     `);
     document.getElementById('nqStart')?.addEventListener('click', ()=>{ try{sfx('confirm')}catch(_){ } screenQ(1); });
-    setTimeout(() => showPreviewTooltip('name', '.intro-hero'), 2000);
+    setTimeout(() => showPreviewTooltip('name', '.nq-title'), 2000);
   }
 
   function qCard(letter, text){
@@ -3072,16 +2980,16 @@ function shake(){
 
   function screenIntro(){
     app.innerHTML = `
-      <div class="wrap wrap-shake intro-premium">
-        <div class="sh-gift-icon" aria-hidden="true" style="margin-bottom:24px; transform:scale(1.2)">🎁</div>
-        <h1 class="intro-hero">${copy.introTitle}</h1>
-        <p class="intro-sub">${copy.introSub}</p>
-        <button id="shStart" class="intro-btn">${copy.introBtn}</button>
-        <div class="sh-sub" style="font-size:12px; margin-top:24px; opacity:0.5">no data collected</div>
+      <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
+        <div class="sh-gift-icon" aria-hidden="true">🎁</div>
+        <h1 class="sh-title">${copy.introTitle}</h1>
+        <p class="sh-sub">${copy.introSub}</p>
+        <button id="shStart" class="btn sh-cta brand">${copy.introBtn}</button>
+        <div class="sh-sub" style="font-size:12px">no data collected</div>
       </div>
     `;
     document.getElementById('shStart')?.addEventListener('click', ()=>{ runAttempt(); }, { once:true });
-    setTimeout(() => showPreviewTooltip('name', '.intro-hero'), 2000);
+    setTimeout(() => showPreviewTooltip('name', '.sh-title'), 2000);
   }
 
   function runAttempt(){
@@ -3375,17 +3283,16 @@ var copy = {
 
   // --- מסכים ---
   function screenIntro(){
-    app.innerHTML = `
-      <div class="wrap wrap-breath intro-premium">
-        <div class="bv-gift-icon" aria-hidden="true" style="margin-bottom:24px; transform:scale(1.2)">🎁</div>
-        <h1 class="intro-hero">${copy.introTitle}</h1>
-        <p class="intro-sub">${copy.introSub}</p>
-        <button id="bv-start" class="intro-btn">${copy.introBtn}</button>
-        <div class="bv-sub" style="font-size:12px; margin-top:24px; opacity:0.5">no data collected</div>
-      </div>
-    `;
+    app.innerHTML =
+      '<div class="wrap wrap-breath' + (activeTheme !== 'dark' ? ' theme-' + activeTheme : '') + '">'+
+        '<div class="bv-gift-icon" aria-hidden="true">🎁</div>'+
+'<h1 class="bv-title">'+copy.introTitle+'</h1>'+
+'<p class="bv-sub">'+copy.introSub+'</p>'+
+'<button id="bv-start" class="btn bv brand">'+copy.introBtn+'</button>'+
+        '<div class="bv-sub" style="font-size:12px">no data collected</div>'+
+      '</div>';
     document.getElementById('bv-start').addEventListener('click', function(){ screenCount(1); });
-    setTimeout(() => showPreviewTooltip('name', '.intro-hero'), 2000);
+    setTimeout(() => showPreviewTooltip('name', '.bv-title'), 2000);
   }
 
   function screenCount(attempt){

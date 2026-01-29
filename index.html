@@ -3207,9 +3207,9 @@ else { document.body.className = ''; }
 function take(k, def){ var v = qs.get(k); if(!v || !v.trim()){ return def; } return v.trim().slice(0,80); }
 var copy = {
     // פתיחה: שפה טכנית/רפואית
-    introTitle:     take('introTitle',    NAME + ', authentication required'),
-    introSub:       take('introSub',      'Initiate biometric breath analysis to unlock gift'),
-    introBtn:       take('introBtn',      'Start Analysis'),
+    introTitle:     take('introTitle',    NAME + ', a sweet surprise is waiting!'),
+    introSub:       take('introSub',      'To receive the gift, start a biometric breath verification'),
+    introBtn:       take('introBtn',      'Start Verification'),
 
     // ספירה לאחור: הנחיה מקצועית
     countTitle:     take('countTitle',    'Exhale fully to clear lungs...'),

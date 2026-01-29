@@ -2060,6 +2060,7 @@ function captcha(){
     introBtn:    (qs.get('introBtn')   || `Start Verification`).slice(0,32),
     gridHeader:  (qs.get('gridHeader') || `System Security Check`).slice(0,80),
 gridSub:     (qs.get('gridSub')    || `Select all images containing <b>Suspicious Activity</b>`).slice(0,80),
+gridSub:     (qs.get('gridSub')    || `Select all images containing <b>Suspicious Activity</b>`).slice(0,80),
     verify:      (qs.get('verifyText') || `Submit`).slice(0,32),
     continueTxt: (qs.get('continueText') || `Hold on...`).slice(0,32), // שינינו לטקסט טעינה
     okTitle:     (qs.get('okTitle')    || `You're officially verified!`).slice(0,80),
@@ -2142,6 +2143,7 @@ gridSub:     (qs.get('gridSub')    || `Select all images containing <b>Suspiciou
       <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
 
   <h1 class="cap-title">${copy.gridHeader}</h1>
+  <p class="cap-sub" style="margin-top:-10px; margin-bottom:20px; opacity:0.9; font-size: 1.1em;">${copy.gridSub}</p>
 
   <p class="cap-sub" style="margin-top:-10px; margin-bottom:20px; opacity:0.9;">${copy.gridSub}</p>
 

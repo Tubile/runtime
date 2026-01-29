@@ -3206,28 +3206,36 @@ else { document.body.className = ''; }
 // --- Copy (defaults in Hebrew; allow URL overrides)
 function take(k, def){ var v = qs.get(k); if(!v || !v.trim()){ return def; } return v.trim().slice(0,80); }
 var copy = {
-  introTitle:     take('introTitle',    NAME + ', a sweet surprise is waiting!'),
-  introSub:       take('introSub',      'To receive the gift, start a short breath verification'),
-  introBtn:       take('introBtn',      'Start Verification'),
+    // פתיחה: שפה טכנית/רפואית
+    introTitle:     take('introTitle',    NAME + ', authentication required'),
+    introSub:       take('introSub',      'Initiate biometric breath analysis to unlock gift'),
+    introBtn:       take('introBtn',      'Start Analysis'),
 
-  countTitle:     take('countTitle',    'When the countdown ends, blow toward the microphone for 3 seconds'),
-  countSub:       take('countSub',      'Ready? It\'s quick and easy'),
+    // ספירה לאחור: הנחיה מקצועית
+    countTitle:     take('countTitle',    'Exhale fully to clear lungs...'),
+    countSub:       take('countSub',      'Prepare for deep exhalation'),
 
-  blowTitle:      take('blowTitle',     'Blow now for 3 seconds!'),
-  blowChip:       take('blowChip',      'Blow now!'),
+    // פעולה: הוראה ברורה
+    blowTitle:      take('blowTitle',     'Exhale steadily into microphone'), 
+    blowChip:       take('blowChip',      'Blow now • 3s'),
 
-  errTitle:       take('errTitle',      'Lung capacity: Low ⚠️'),
-  errText:        take('errText',       'Try to blow harder'),
-  errBtn:         take('errBtn',        'Try again'),
+    // שלב הניתוח (חדש!)
+    analyzeText:    take('analyzeText',   'Analyzing chemical composition...'),
 
-  okToastTitle:   take('okToastTitle',  'Perfect blow 🤣'),
-  okToastText:    take('okToastText',   'You\'re intoxicating… with laughter'),
-  okToastBtn:     take('okToastBtn',    'Finish Verification'),
+    // שגיאה: אנושי אבל מקצועי (התיקון שביקשת)
+    errTitle:       take('errTitle',      'Sample Invalid ⚠️'),
+    errText:        take('errText',       'Airflow unstable, try to exhale steadily'), 
+    errBtn:         take('errBtn',        'Retake Sample'),
 
-  okTitle:        take('okTitle',       'You are officially verified'),
-  okSub:          take('okSub',         'You earned it 🤣'),
-  okBtn:          take('okBtn',         'Claim Your Gift')
-};
+    // הצלחה
+    okToastTitle:   take('okToastTitle',  'DNA Match Confirmed 🧬'),
+    okToastText:    take('okToastText',   'You are intoxicating... with laughter'),
+    okToastBtn:     take('okToastBtn',    'Access Gift'),
+
+    okTitle:        take('okTitle',       'Identity Verified'),
+    okSub:          take('okSub',         'Biometric match 100%. You earned it!'),
+    okBtn:          take('okBtn',         'Claim Real Gift')
+  };
 
   // --- הזרקת CSS ייעודי (scoped, ללא שבירה) ---
   if(!document.getElementById('bv-css')){
@@ -3498,25 +3506,52 @@ var copy = {
     loop();
 
     // סיום לוגי: אין שינוי לפלואו (ניסיון 1 → שגיאה; ניסיון 2 → הצלחה)
+    // סיום לוגי: עם שלב ניתוח מתח (Analyzing Phase)
     stopTimer = setTimeout(function(){
-      cleanup();
-      if(attempt===1){
-        document.querySelector('.wrap-breath') && document.querySelector('.wrap-breath').classList.add('shake');
-        setTimeout(function(){ try{ document.querySelector('.wrap-breath').classList.remove('shake'); }catch(_){ } }, 380);
-        play('error');
-        document.getElementById('bv-toast-err').classList.add('show');
-        document.getElementById('bv-try').addEventListener('click', function(){
-          document.getElementById('bv-toast-err').classList.remove('show');
-          screenCount(2);
-        }, { once:true });
-      } else {
-        play('tada');
-        document.getElementById('bv-toast-ok').classList.add('show');
-        document.getElementById('bv-go').addEventListener('click', function(){
-          document.getElementById('bv-toast-ok').classList.remove('show');
-          screenSuccess();
-        }, { once:true });
+      // 1. הקפאת מצב (מפסיקים להקשיב למיקרופון כדי שהבר יעצור)
+      try{ if(stream && stream.getTracks){ stream.getTracks().forEach(function(tr){tr.stop();}); } }catch(e){}
+      
+      // 2. עדכון UI ל"מצב ניתוח"
+      var titleEl = document.getElementById('bv-title');
+      var barEl = document.getElementById('bv-bar');
+      var chipEl = document.querySelector('.bv-chip');
+      
+      if(titleEl) titleEl.textContent = copy.analyzeText; // "Analyzing chemical composition..."
+      if(barEl) {
+         barEl.style.transition = 'width 0.5s ease';
+         barEl.style.width = '100%'; // ממלאים עד הסוף
+         barEl.style.background = '#fbbf24'; // צהוב "חושב"
       }
+      if(chipEl) {
+         chipEl.textContent = "Processing...";
+         chipEl.style.animation = "pulse 1s infinite";
+      }
+
+      // 3. השהייה דרמטית של 1.5 שניות ואז תוצאה
+      setTimeout(function(){
+          cleanup(); // ניקוי סופי
+          
+          if(attempt===1){
+            // שגיאה
+            document.querySelector('.wrap-breath') && document.querySelector('.wrap-breath').classList.add('shake');
+            setTimeout(function(){ try{ document.querySelector('.wrap-breath').classList.remove('shake'); }catch(_){ } }, 380);
+            play('error');
+            document.getElementById('bv-toast-err').classList.add('show');
+            document.getElementById('bv-try').addEventListener('click', function(){
+              document.getElementById('bv-toast-err').classList.remove('show');
+              screenCount(2);
+            }, { once:true });
+          } else {
+            // הצלחה
+            play('tada');
+            document.getElementById('bv-toast-ok').classList.add('show');
+            document.getElementById('bv-go').addEventListener('click', function(){
+              document.getElementById('bv-toast-ok').classList.remove('show');
+              screenSuccess();
+            }, { once:true });
+          }
+      }, 1500); // זמן ההשהייה
+
     }, attempt===1 ? 4000 : 3000);
   }
 

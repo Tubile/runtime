@@ -3012,9 +3012,11 @@ analyzeText:(qs.get('analyzeText')|| `Checking...`).slice(0,80),
     const showCountdown = (attempt <= 2);
     
 // כותרת משתנה:
-// 1. בזמן ספירה: "Get ready..." (או מה שהוגדר ב-sensorInit)
-// 2. כשנגמר הזמן: "Shake your phone!" (ההוראה הברורה מ-sensorAcq)
-let titleText = copy.sensorInit; 
+// ניסיון 1 = הסבר מלא (countTitle).
+// ניסיונות הבאים = קצר ולעניין (sensorInit).
+let titleText = (attempt === 1) ? copy.countTitle : copy.sensorInit;
+
+// אם אין ספירה לאחור (ניסיונות מתקדמים מאוד) = ישר לפקודה
 if (!showCountdown) titleText = copy.sensorAcq;
 
     app.innerHTML = `

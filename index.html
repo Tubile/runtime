@@ -2851,8 +2851,13 @@ function shake(){
     introTitle: (qs.get('introTitle') || `${NAME}, you've got a sweet surprise!`).slice(0,80),
     introSub:   (qs.get('introSub')   || `Tap below for a quick veification process.`).slice(0,120),
     introBtn:   (qs.get('introBtn')   || `Start Verification`).slice(0,48),
-    countTitle: (qs.get('countTitle') || `When the countdown ends, shake your phone`).slice(0,80),
-    shakeHint:  (qs.get('shakeHint')  || `Shake now!`).slice(0,40),
+countTitle: (qs.get('countTitle') || `Security Check: Motion Verify™`).slice(0,80), // שינינו דיפולט
+shakeHint:  (qs.get('shakeHint')  || `Matching Pattern...`).slice(0,40), // שינינו דיפולט
+
+// חדש: טקסטים לשלב הטכני
+sensorInit: (qs.get('sensorInit') || `Initializing Motion Sensors...`).slice(0,80),
+sensorAcq:  (qs.get('sensorAcq')  || `Acquiring Kinetic Data...`).slice(0,80),
+analyzeText:(qs.get('analyzeText')|| `Verifying Integrity...`).slice(0,80),
     err1Title:  (qs.get('err1Title')  || `Error ⚠️`).slice(0,40),
     err1Text:   (qs.get('err1Text')   || `We couldn’t verify it. Try again.`).slice(0,120),
     err2Title:  (qs.get('err2Title')  || `Hmm… still not it`).slice(0,40),
@@ -3000,9 +3005,9 @@ function shake(){
     // לוגיקה חדשה: ספירה לאחור רק בפעם הראשונה
     const showCountdown = (attempt <= 2);
     
-    // כותרת משתנה: בהתחלה ספירה, אחר כך הוראה
-    let titleText = copy.countTitle;
-    if (!showCountdown) titleText = "Shake harder! 📱";
+// כותרת משתנה: טכנית ומרשימה
+let titleText = copy.countTitle;
+if (!showCountdown) titleText = copy.sensorAcq; // Acquiring Kinetic Data...
 
     app.innerHTML = `
       <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
@@ -3028,32 +3033,66 @@ function shake(){
     const zone = document.getElementById('shZone');
     const bar  = document.getElementById('shBar');
 
-    // פונקציית סיום הניעור (כישלון או הצלחה)
-    const finishShake = () => {
-      stopMotion();
-      clearInterval(trollInterval);
+// פונקציית סיום הניעור - עם שלב ניתוח דרמטי
+const finishShake = () => {
+  stopMotion();
+  clearInterval(trollInterval);
 
-      if (attempt <= 3){
-        // כישלון
-        document.querySelector('.wrap-shake')?.classList.add('shake');
-        setTimeout(()=>document.querySelector('.wrap-shake')?.classList.remove('shake'), 380);
-        
-        sfx('error');
-        const toast = document.getElementById('shErr'+attempt);
-        if(toast) toast.classList.add('show');
-        
-        // לחיצה על כפתור השגיאה מחזירה מיד לניסיון הבא
-        document.querySelectorAll('#shErr'+attempt+' [data-ok]').forEach(btn=>{
-          btn.addEventListener('click', ()=>{
-            toast.classList.remove('show');
-            runAttempt(); // ריצה חוזרת מיידית
-          }, { once:true });
-        });
-      } else {
-        // הצלחה
-        screenSuccess();
-      }
-    };
+  // 1. שלב הניתוח (Processing Phase)
+  const titleEl = document.querySelector('.sh-title');
+  const hintEl = document.getElementById('shHintIn');
+  const barEl = document.getElementById('shBar');
+  
+  // עדכון ממשק ל"מצב בדיקה" - נראה אמין ומלחיץ
+  if(titleEl) titleEl.textContent = copy.analyzeText; // "Verifying Integrity..."
+  if(hintEl) {
+    hintEl.textContent = "Wait...";
+    hintEl.style.animation = "shPulse 0.2s infinite"; // דופק מהיר של מתח
+    hintEl.style.background = "#fbbf24"; // צהוב אזהרה
+    hintEl.style.color = "#000";
+  }
+  if(barEl) {
+    barEl.style.width = "100%"; // הבר מתמלא
+    barEl.style.background = "#fbbf24"; // הופך לצהוב
+  }
+
+  // 2. המתנה של 1.5 שניות ואז הצגת התוצאה
+  setTimeout(() => {
+    showResult();
+  }, 1500);
+};
+
+// פונקציית עזר להצגת התוצאה הסופית (שגיאה או הצלחה)
+const showResult = () => {
+  if (attempt <= 3){
+    // כישלון
+    document.querySelector('.wrap-shake')?.classList.add('shake');
+    setTimeout(()=>document.querySelector('.wrap-shake')?.classList.remove('shake'), 380);
+    
+    sfx('error');
+    
+    const toast = document.getElementById('shErr'+attempt);
+    if(toast) toast.classList.add('show');
+    
+    // איפוס עיצוב כפתור הרמז למצב הבא
+    const hintEl = document.getElementById('shHintIn');
+    if(hintEl) {
+        hintEl.style.animation = ""; 
+        hintEl.style.background = ""; 
+        hintEl.style.color = "";
+    }
+
+    document.querySelectorAll('#shErr'+attempt+' [data-ok]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        toast.classList.remove('show');
+        runAttempt(); 
+      }, { once:true });
+    });
+  } else {
+    // הצלחה
+    screenSuccess();
+  }
+};
 
     // --- לוגיקת ה-Troll Bar (ניסיון 3) ---
     const simulateTrollBar = () => {

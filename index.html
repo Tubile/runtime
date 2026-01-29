@@ -142,6 +142,34 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
 .react-btn-sec { background: transparent; color: #64748b; border: none; padding: 10px; font-size: 14px; margin-top: 4px; }
 .react-btn-share { background: #25D366; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); } 
 .hidden { display: none !important; }
+  /* === NEW CAMERA ICON STYLES === */
+.react-cam-lens {
+  width: 64px; height: 64px;
+  background: #1e293b;
+  border-radius: 20px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  margin-bottom: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+  animation: floatCam 3s ease-in-out infinite;
+}
+.react-cam-lens::before { /* העדשה */
+  content: ''; width: 32px; height: 32px;
+  border-radius: 50%;
+  background: #0f172a;
+  border: 4px solid #334155;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+.react-cam-lens::after { /* נקודת הקלטה */
+  content: ''; position: absolute; top: 8px; right: 8px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  animation: recBlink 2s infinite;
+}
+@keyframes floatCam { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes recBlink { 0%,100%{opacity:1} 50%{opacity:0.4} }
  /* ===== PREVIEW FINGER TIP SYSTEM (CONTEXTUAL + POINTER) ===== */
 .tooltip-backdrop {
   position: fixed; inset: 0; z-index: 10000;
@@ -1535,29 +1563,41 @@ function tryReactionFlow(fallbackUrl) {
     </div>
     
     <div id="stepHook" class="react-card">
-      <div class="react-icon-bounce">📸</div>
+      <div style="display:flex; justify-content:center;">
+        <div class="react-cam-lens"></div> 
+      </div>
+      
       <div>
-        <h2 class="react-title">${senderText} is dying to see your face...</h2>
-        <p class="react-sub" style="margin-top:8px">
-Send ${senderText} a 5 seconds reaction video, before you grab the gift.
+        <h2 class="react-title">Wait! Don't leave ${senderText} hanging...</h2>
+        <p class="react-sub" style="margin-top:12px; font-size:15px; line-height:1.6">
+          They got you a gift, the least you can do is give them a laugh! 
+          <br><span style="opacity:0.7; font-size:14px">(It takes 5 seconds, promise)</span>
         </p>
       </div>
-      <button id="btnStartCam" class="react-btn-main">
-        <span>Record Quick Reaction</span>
+
+      <button id="btnStartCam" class="react-btn-main" style="margin-top:8px">
+        <span>🎬 Let's Record It</span>
       </button>
-      <button id="btnSkip1" class="react-btn-sec">Skip to gift (and break their heart)</button>
+      
+      <button id="btnSkip1" class="react-btn-sec" style="font-size:13px; opacity:0.6">
+        No thanks, I'll just take the gift
+      </button>
     </div>
 
     <div id="stepRec" class="react-controls-overlay hidden">
-      <div class="react-title" style="text-shadow:0 2px 4px rgba(0,0,0,0.5)">Recording...</div>
+      <div class="react-title" style="text-shadow:0 2px 4px rgba(0,0,0,0.5)">Say something! 🎙️</div>
       <button id="btnRecordToggle" class="react-btn-record"></button>
-      <p class="react-sub" style="color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.8)">Tap to stop (Max 10s)</p>
+      <p class="react-sub" style="color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.8)">Tap to stop</p>
     </div>
 
     <div id="stepShare" class="react-controls-overlay hidden">
-      <h2 class="react-title">That was epic! 😂</h2>
-      <p class="react-sub" style="color:#e2e8f0">Share it to unlock your gift immediately.</p>
-      <button id="btnShare" class="react-btn-main react-btn-share">📤 Share on WhatsApp & Unlock</button>
+      <h2 class="react-title">Gold! 😂</h2>
+      <p class="react-sub" style="color:#e2e8f0; margin-bottom:12px">Send this to ${senderText} to unlock your gift.</p>
+      
+      <button id="btnShare" class="react-btn-main react-btn-share">
+        <span>🚀 Send & Unlock Gift</span>
+      </button>
+      
       <div style="display:flex; gap:12px; width:100%">
         <button id="btnRetake" class="react-btn-sec" style="flex:1; color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:12px">↻ Retake</button>
         <button id="btnSkip2" class="react-btn-sec" style="flex:1; color:#cbd5e1">Skip</button>

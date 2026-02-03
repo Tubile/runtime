@@ -2325,6 +2325,7 @@ function captcha(){
 // ===== Infinite Buttons =====
 function infinite(){
   const app = document.getElementById('app');
+  document.body.style.overflow = 'hidden';
 
   // קריאת פרמטרים
   const qs = new URLSearchParams(location.search);

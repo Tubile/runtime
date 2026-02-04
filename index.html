@@ -2084,7 +2084,7 @@ function captcha(){
   const PREV  = (qs.get('preview')||'0').trim()==='1';
   const NAME  = (qs.get('name')||'Friend').trim();
   let _g = qs.get('giftUrl') || '';
-  const GIFT = (_g && !_g.match(/^http/)) ? 'https://' + _g : _g;
+  const GIFT = normalizeUrl(qs.get('giftUrl'));
   
   // Theme
   const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
@@ -2331,7 +2331,7 @@ function infinite(){
   const qs = new URLSearchParams(location.search);
   const NAME = (qs.get('name')||'Friend').trim();
   let _g = qs.get('giftUrl') || '';
-  const GIFT = (_g && !_g.match(/^http/)) ? 'https://' + _g : _g; 
+  const GIFT = normalizeUrl(qs.get('giftUrl'));
   
   // Theme
   const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();
@@ -2879,7 +2879,7 @@ function shake(){
   const PREV = (qs.get('preview')||'0').trim()==='1';
   const NAME = (qs.get('name')||'Friend').trim();
   let _g = qs.get('giftUrl') || '';
-  const GIFT = (_g && !_g.match(/^http/)) ? 'https://' + _g : _g;
+  const GIFT = normalizeUrl(qs.get('giftUrl'));
   
   // Theme
   const THEME = (qs.get('theme') || 'dark').toLowerCase().trim();

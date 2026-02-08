@@ -3614,10 +3614,11 @@ var copy = {
         '<canvas id="bv-confetti" class="confetti-canvas"></canvas>'+
       '</div>';
     confettiBurst(document.getElementById('bv-confetti'));
-        var b = document.getElementById('bv-open');
+    var b = document.getElementById('bv-open');
     b && b.addEventListener('click', function(){
-      // השינוי: עוקף את כל הבדיקות והולך ישר לצ'קאוט
-      if(GIFT) window.location.href = GIFT;
+      if(PREV) return;
+      play('confirm');
+      tryReactionFlow(GIFT);
     });
   }
 

@@ -2025,9 +2025,14 @@ function showKfBadge() {
 
     // --- חיבור לוגיקת הלחיצה (לשני הכפתורים) ---
     const handleFinalize = function() {
-      console.log("Finalize clicked");
-      window.parent.postMessage('FINALIZE_PRANK_CLICKED', '*');
-    };
+  console.log("Finalize clicked");
+  // ניווט ישיר לדף Finalize - ללא בקשת מייל
+  try {
+    window.top.location.href = '/finalize';
+  } catch(e) {
+    window.location.href = '/finalize';
+  }
+};
 
     const priceBtn = document.getElementById('green-price-btn');
     const arrowBtn = document.getElementById('bridge-arrow-btn');

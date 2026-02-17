@@ -3336,22 +3336,44 @@ const showResult = () => {
 
   function screenSuccess(){
     showKfBadge();
+    
+    // בדיקה אם יש מתנה אמיתית
+    const hasGift = !!GIFT && GIFT !== '#';
+    
+    // הגדרת טקסטים בהתאם למסלול (מתנה או הטרלה)
+    const finalTitle = hasGift ? copy.okTitle : "Okay, it's really you!";
+    const finalSub = hasGift ? copy.okSub : "A real gift costs money, and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead. Love you! 🫶";
+    
+    // הגדרת טקסט הכפתור
+    let btnText = copy.okBtn;
+    if (!hasGift) {
+      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Claim your REAL gift 🎁";
+    }
+
     app.innerHTML = `
       <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="sh-success-icon" aria-hidden="true">💝</div>
-        <h1 class="sh-title">${copy.okTitle}</h1>
-        <p class="sh-sub">${copy.okSub}</p>
-        <button id="shOpen" class="btn sh-cta green"${PREV?' disabled':''}>${copy.okBtn}</button>
-        <div class="sh-sub" style="font-size:12px">${copy.love}</div>
-        ${ PREV ? `<div class="sh-sub">Preview only – button disabled</div>` : `` }
+        <h1 class="sh-title">${finalTitle}</h1>
+        <p class="sh-sub" style="margin-bottom: 24px;">${finalSub}</p>
+        <button id="shOpen" class="btn sh-cta green"${PREV?' disabled':''}>${btnText}</button>
+        ${ PREV ? `<div class="sh-sub" style="margin-top:12px;">Preview only – button disabled</div>` : `` }
         <canvas id="shConfetti2" class="confetti-canvas"></canvas>
       </div>
     `;
     sfx('tada');
     confettiBurst(document.getElementById('shConfetti2'));
-    document.getElementById('shOpen')?.addEventListener('click', ()=>{
+    
+    document.getElementById('shOpen')?.addEventListener('click', function(){
       if(PREV) return;
-      tryReactionFlow(GIFT);
+      try{sfx('confirm')}catch(_){} // סאונד קליק
+      
+      if (!hasGift && !REACTION_ON) {
+        // מסלול הטרלה בלבד -> טרול פלוץ!
+        triggerTrollFart(this);
+      } else {
+        // מסלול רגיל או ריאקשן
+        tryReactionFlow(GIFT);
+      }
     });
   }
 

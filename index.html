@@ -2619,10 +2619,24 @@ function infinite(){
       btn.parentNode.replaceChild(newBtn, btn);
       newBtn.style.transform = 'translate(0,0)';
       
+      // בדיקה אם יש מתנה אמיתית
+      const hasGift = !!GIFT && GIFT !== '#';
+      
+      // הגדרת טקסטים בהתאם למסלול (במקור היה רק כותרת ללא תת-כותרת, נוסיף אותה כאן)
+      const finalTitle = hasGift ? copy.earned : "Okay, it's really you!";
+      const finalSub = hasGift ? "" : "<p class='sub' style='margin-bottom: 24px; font-size:16px; opacity:0.85'>A real gift costs money, and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead. Love you! 🫶</p>";
+      
+      // הגדרת טקסט הכפתור
+      let btnText = copy.btn8_success;
+      if (!hasGift) {
+        btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Claim your REAL gift 🎁";
+      }
+
       inner.innerHTML = `
         <div class="inf-success-icon" aria-hidden="true" style="margin:0 auto 16px">💝</div>
-        <h1 style="font-size:24px; margin-bottom:8px">${copy.earned}</h1>
-        <button id="ibtn-final" class="btn green"${PREV?' disabled':''}>${copy.btn8_success}</button>
+        <h1 style="font-size:24px; margin-bottom:8px">${finalTitle}</h1>
+        ${finalSub}
+        <button id="ibtn-final" class="btn green"${PREV?' disabled':''}>${btnText}</button>
         ${ PREV ? `<div class="sub" style="margin-top:10px; font-size:12px">Preview only – button disabled</div>` : `` }
         <canvas id="confetti-final" class="confetti-canvas"></canvas>
       `;
@@ -2630,14 +2644,20 @@ function infinite(){
       canvas = inner.querySelector('#confetti-final');
       boom();
       sfx('tada');
+      
       document.getElementById('ibtn-final').addEventListener('click', function(){
-        // Fix: Block click in preview mode
         if(PREV) return;
-        tryReactionFlow(GIFT);
+        sfx('confirm'); // סאונד קליק
+        
+        if (!hasGift && !REACTION_ON) {
+          // מסלול הטרלה בלבד -> טרול פלוץ!
+          triggerTrollFart(this);
+        } else {
+          // מסלול רגיל או ריאקשן
+          tryReactionFlow(GIFT);
+        }
       });
     }
-  });
-}
 
 // ===== Narcissist Questions =====
 function narcissistQ(){

@@ -362,6 +362,19 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
 @keyframes moodFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
 @keyframes pulseGlow { 0%,100%{opacity: 0.6; box-shadow: 0 0 8px #10b981;} 50%{opacity: 1; box-shadow: 0 0 16px #10b981;} }
 @keyframes softBlink { 0%,100%{opacity: 1;} 50%{opacity: 0.7;} }
+  /* --- TROLL FART ANIMATION --- */
+.troll-fart-overlay {
+  position: fixed; bottom: 30px; right: -150px; z-index: 20000;
+  transition: transform 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex; flex-direction: column; align-items: center; pointer-events: none;
+}
+.troll-fart-overlay.walk-in { transform: translateX(-200px); }
+.troll-fart-overlay.walk-out { transform: translateX(150px); }
+.troll-fart-img { 
+  font-size: 80px; line-height: 1; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+  /* כאן תוכל בהמשך לשים תמונת GIF אמיתית במקום האימוג'י */
+}
+.fart-shake { animation: infShake 0.4s ease-in-out; }
 </style>
 
 <!-- Infinite UX extra classes -->
@@ -1881,6 +1894,55 @@ function sfx(kind){
       o.connect(g); g.connect(ctx.destination); o.start(); o.stop(now + 0.16);
     }catch(_) {}
   }
+}
+  // --- TROLL FART LOGIC ---
+function triggerTrollFart(btnElement) {
+  // 1. ננטרל את הכפתור ונשנה טקסט זמני
+  btnElement.disabled = true;
+  btnElement.innerText = "Claiming gift...";
+  btnElement.style.opacity = "0.8";
+
+  // 2. ניצור את הטרול אם הוא לא קיים
+  let troll = document.getElementById('troll-fart');
+  if (!troll) {
+    troll = document.createElement('div');
+    troll.id = 'troll-fart';
+    troll.className = 'troll-fart-overlay';
+    troll.innerHTML = `<div class="troll-fart-img">🧌</div>`;
+    document.body.appendChild(troll);
+  }
+
+  // איפוס קלאסים
+  troll.classList.remove('walk-out');
+  
+  // 3. הטרול נכנס למסך
+  requestAnimationFrame(() => {
+    troll.classList.add('walk-in');
+  });
+
+  // 4. אחרי שנייה וחצי (שהוא נכנס) - פלוץ!
+  setTimeout(() => {
+    // השמעת סאונד זמני (חינמי מהרשת)
+    const fartAudio = new Audio('https://www.soundjay.com/human/sounds/fart-01.mp3'); 
+    fartAudio.play().catch(e => {});
+
+    // הטרול עושה תנועה + כל המסך רועד
+    troll.querySelector('.troll-fart-img').style.transform = "scale(1.2)";
+    document.body.classList.add('fart-shake');
+
+    // 5. אחרי הפלוץ (השהייה קצרה) - משנים את הכפתור והטרול יוצא
+    setTimeout(() => {
+      document.body.classList.remove('fart-shake');
+      troll.querySelector('.troll-fart-img').style.transform = "scale(1) scaleX(-1)"; // מסתובב אחורה
+      troll.classList.remove('walk-in');
+      troll.classList.add('walk-out'); // יוצא
+
+      // שינוי הכפתור לפאנץ' הסופי
+      btnElement.innerText = "Just kidding, no gift for you. Bye 👋";
+      btnElement.className = "btn error-red"; // הופך לאדום
+    }, 1200);
+
+  }, 1500);
 }
 
 // הצג סטטוס־בר רק בפריביו

@@ -1925,7 +1925,7 @@ function triggerTrollFart(btnElement) {
     troll = document.createElement('div');
     troll.id = 'troll-fart';
     troll.className = 'troll-fart-overlay';
-    troll.innerHTML = `<img src="troll-fart.gif" class="troll-fart-img" style="width: 150px; height: auto;" />`;
+    troll.innerHTML = `<img src="troll-fart.gif" class="troll-fart-img" style="width: 280px; height: auto;" />`;
     document.body.appendChild(troll);
   }
 
@@ -1937,29 +1937,29 @@ function triggerTrollFart(btnElement) {
     troll.classList.add('walk-in');
   });
 
-  // 4. אחרי שנייה וחצי (שהוא נכנס) - פלוץ!
+  // 4. תזמון הפלוץ (נכוון ל-2.5 שניות מתחילת ה-GIF, איפה שהוא מתכופף)
   setTimeout(() => {
-    // השמעת סאונד זמני (חינמי מהרשת)
+    // השמעת סאונד פלוץ
     const fartAudio = new Audio('https://www.soundjay.com/human/sounds/fart-01.mp3'); 
     fartAudio.play().catch(e => {});
 
-    // הטרול עושה תנועה + כל המסך רועד
-    troll.querySelector('.troll-fart-img').style.transform = "scale(1.2)";
+    // כל המסך רועד
     document.body.classList.add('fart-shake');
 
-    // 5. אחרי הפלוץ (השהייה קצרה) - משנים את הכפתור והטרול יוצא
+    // 5. השהייה נוספת כדי לתת ל-GIF לסיים את ה-6 שניות שלו לפני שהוא בורח
+    // (חיכינו כבר 2500ms, נחכה עוד 3500ms כדי להשלים ל-6000ms שזה 6 שניות)
     setTimeout(() => {
       document.body.classList.remove('fart-shake');
-      troll.querySelector('.troll-fart-img').style.transform = "scale(1) scaleX(-1)"; // מסתובב אחורה
+      troll.querySelector('.troll-fart-img').style.transform = "scale(1) scaleX(-1)"; // מסתובב כדי לצאת
       troll.classList.remove('walk-in');
-      troll.classList.add('walk-out'); // יוצא
+      troll.classList.add('walk-out'); // יוצא מהמסך
 
       // שינוי הכפתור לפאנץ' הסופי
-      btnElement.innerText = "Just kidding, there's no gift";
+      btnElement.innerText = "Just kidding, no gift for you. Bye 👋";
       btnElement.className = "btn error-red"; // הופך לאדום
-    }, 1200);
+    }, 3500);
 
-  }, 1500);
+  }, 2500);
 }
 
 // הצג סטטוס־בר רק בפריביו

@@ -1954,9 +1954,17 @@ function triggerTrollFart(btnElement) {
       troll.classList.remove('walk-in');
       troll.classList.add('walk-out'); // יוצא מהמסך
 
-      // שינוי הכפתור לפאנץ' הסופי
-      btnElement.innerText = "Just kidding, no gift for you. Bye 👋";
-      btnElement.className = "btn error-red"; // הופך לאדום
+      // שינוי הכפתור לפאנץ' הסופי (תוך שמירה על הצורה המקורית)
+      btnElement.innerText = "Actually I was serious the first time";
+      
+      // 1. מסירים רק את קלאס הצבע המקורי, שומרים על קלאס המבנה (כמו nq-btn)
+      btnElement.classList.remove('green', 'nq-green', 'brand');
+      
+      // 2. כופים צבע אדום דרך inline-style כדי לדרוס ב-100% כל עיצוב אחר
+      btnElement.style.setProperty('background', '#dc2626', 'important');
+      btnElement.style.setProperty('color', '#ffffff', 'important');
+      btnElement.style.setProperty('box-shadow', '0 4px 16px rgba(220, 38, 38, 0.4)', 'important');
+      btnElement.style.setProperty('border', '1px solid rgba(255, 255, 255, 0.2)', 'important');
     }, 3500);
 
   }, 2500);
@@ -2375,7 +2383,7 @@ function captcha(){
     const animBtn = !hasGift ? " troll-reveal-btn" : "";
     
     if (!hasGift) {
-      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Claim your REAL gift 🎁";
+      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Relax, I'm kidding. Claim your gift 🎁";
     }
 
     app.innerHTML = `
@@ -2651,7 +2659,7 @@ function infinite(){
       // הגדרת טקסט הכפתור
       let btnText = copy.btn8_success;
       if (!hasGift) {
-        btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Claim your REAL gift 🎁";
+        btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Relax, I'm kidding. Claim your gift 🎁";
       }
 
       inner.innerHTML = `
@@ -2968,7 +2976,7 @@ else { document.body.className = ''; }
     const animBtn = !hasGift ? " troll-reveal-btn" : "";
     
     if (!hasGift) {
-      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Claim your REAL gift 🎁";
+      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Relax, I'm kidding. Claim your gift 🎁";
     }
 
     // 2. Render HTML including the specific Canvas (Captcha Style)
@@ -3375,7 +3383,7 @@ const showResult = () => {
     const animBtn = !hasGift ? " troll-reveal-btn" : "";
     
     if (!hasGift) {
-      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Claim your REAL gift 🎁";
+      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Relax, I'm kidding. Claim your gift 🎁";
     }
 
     app.innerHTML = `

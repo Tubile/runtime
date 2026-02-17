@@ -2344,22 +2344,43 @@ function captcha(){
 
   function screenSuccess(){
     showKfBadge();
+    
+    // בדיקה אם יש מתנה אמיתית
+    const hasGift = !!GIFT && GIFT !== '#';
+    
+    // הגדרת טקסטים בהתאם למסלול (מתנה או הטרלה)
+    const finalTitle = hasGift ? copy.okTitle : "Okay, it's really you!";
+    const finalSub = hasGift ? copy.okSub : "A real gift costs money... and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead. Love you! 🫶";
+    
+    // הגדרת טקסט הכפתור
+    let btnText = copy.okBtn;
+    if (!hasGift) {
+      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Claim your REAL gift";
+    }
+
     app.innerHTML = `
       <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="cap-success-icon" aria-hidden="true">💝</div>
-        <h1 class="cap-title">${copy.okTitle}</h1>
-        <p class="cap-sub">${copy.okSub}</p>
-        <button id="openGift" class="btn cap-cta green">${copy.okBtn}</button>
-        ${PREV ? `<div class="cap-hint">Preview only – button disabled</div>` : ``}
+        <h1 class="cap-title">${finalTitle}</h1>
+        <p class="cap-sub" style="margin-bottom: 24px;">${finalSub}</p>
+        <button id="openGift" class="btn cap-cta green">${btnText}</button>
+        ${PREV ? `<div class="cap-hint" style="margin-top: 12px;">Preview only – button disabled</div>` : ``}
         <canvas id="cap-confetti-final" class="confetti-canvas"></canvas>
       </div>
     `;
 
     const btn = document.getElementById('openGift');
-    btn.addEventListener('click', ()=>{
+    btn.addEventListener('click', function() {
       if(PREV) return;
       sfx('confirm');
-      tryReactionFlow(GIFT);
+      
+      if (!hasGift && !REACTION_ON) {
+        // מסלול הטרלה בלבד (אין מתנה ואין ריאקשן) -> טרול פלוץ!
+        triggerTrollFart(this);
+      } else {
+        // מסלול רגיל או ריאקשן
+        tryReactionFlow(GIFT);
+      }
     });
   }
 

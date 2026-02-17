@@ -375,6 +375,23 @@ font-size:12px;color:#aeb7c8;background:linear-gradient(0deg,rgba(255,255,255,.0
   /* כאן תוכל בהמשך לשים תמונת GIF אמיתית במקום האימוג'י */
 }
 .fart-shake { animation: infShake 0.4s ease-in-out; }
+  /* --- TROLL REVEAL ANIMATIONS --- */
+@keyframes trollTextReveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes trollBtnFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.troll-reveal-text {
+  opacity: 0;
+  animation: trollTextReveal 1s ease-out 0.4s forwards;
+}
+.troll-reveal-btn {
+  opacity: 0;
+  animation: trollBtnFade 0.8s ease 1.8s forwards;
+}
 </style>
 
 <!-- Infinite UX extra classes -->
@@ -2352,18 +2369,21 @@ function captcha(){
     const finalTitle = hasGift ? copy.okTitle : "Okay, it's really you!";
     const finalSub = hasGift ? copy.okSub : "A real gift costs money... and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead. Love you! 🫶";
     
-    // הגדרת טקסט הכפתור
+    // הגדרת טקסט הכפתור ואנימציות
     let btnText = copy.okBtn;
+    const animText = !hasGift ? " troll-reveal-text" : "";
+    const animBtn = !hasGift ? " troll-reveal-btn" : "";
+    
     if (!hasGift) {
-      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Claim your REAL gift";
+      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Claim your REAL gift 🎁";
     }
 
     app.innerHTML = `
       <div class="wrap wrap-captcha ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="cap-success-icon" aria-hidden="true">💝</div>
         <h1 class="cap-title">${finalTitle}</h1>
-        <p class="cap-sub" style="margin-bottom: 24px;">${finalSub}</p>
-        <button id="openGift" class="btn cap-cta green">${btnText}</button>
+        <p class="cap-sub${animText}" style="margin-bottom: 24px;">${finalSub}</p>
+        <button id="openGift" class="btn cap-cta green${animBtn}">${btnText}</button>
         ${PREV ? `<div class="cap-hint" style="margin-top: 12px;">Preview only – button disabled</div>` : ``}
         <canvas id="cap-confetti-final" class="confetti-canvas"></canvas>
       </div>
@@ -2622,9 +2642,11 @@ function infinite(){
       // בדיקה אם יש מתנה אמיתית
       const hasGift = !!GIFT && GIFT !== '#';
       
-      // הגדרת טקסטים בהתאם למסלול (במקור היה רק כותרת ללא תת-כותרת, נוסיף אותה כאן)
+      // הגדרת טקסטים ואנימציות בהתאם למסלול
       const finalTitle = hasGift ? copy.earned : "Okay, it's really you!";
-      const finalSub = hasGift ? "" : "<p class='sub' style='margin-bottom: 24px; font-size:16px; opacity:0.85'>A real gift costs money, and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead. Love you! 🫶</p>";
+      const animText = !hasGift ? " troll-reveal-text" : "";
+      const animBtn = !hasGift ? " troll-reveal-btn" : "";
+      const finalSub = hasGift ? "" : `<p class='sub${animText}' style='margin-bottom: 24px; font-size:16px; opacity:0.85'>A real gift costs money, and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead. Love you! 🫶</p>`;
       
       // הגדרת טקסט הכפתור
       let btnText = copy.btn8_success;
@@ -2636,7 +2658,7 @@ function infinite(){
         <div class="inf-success-icon" aria-hidden="true" style="margin:0 auto 16px">💝</div>
         <h1 style="font-size:24px; margin-bottom:8px">${finalTitle}</h1>
         ${finalSub}
-        <button id="ibtn-final" class="btn green"${PREV?' disabled':''}>${btnText}</button>
+        <button id="ibtn-final" class="btn green${animBtn}"${PREV?' disabled':''}>${btnText}</button>
         ${ PREV ? `<div class="sub" style="margin-top:10px; font-size:12px">Preview only – button disabled</div>` : `` }
         <canvas id="confetti-final" class="confetti-canvas"></canvas>
       `;
@@ -2940,8 +2962,11 @@ else { document.body.className = ''; }
     const finalTitle = hasGift ? copy.okTitle : "Okay, it's really you!";
     const finalSub = hasGift ? copy.okSub : "A real gift costs money, and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead. Love you! 🫶";
     
-    // הגדרת טקסט הכפתור
+    // הגדרת טקסט הכפתור ואנימציות
     let btnText = copy.okBtn;
+    const animText = !hasGift ? " troll-reveal-text" : "";
+    const animBtn = !hasGift ? " troll-reveal-btn" : "";
+    
     if (!hasGift) {
       btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Claim your REAL gift 🎁";
     }
@@ -2951,8 +2976,8 @@ else { document.body.className = ''; }
       <div class="wrap wrap-nq ${themeClass} ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="nq-success-icon" aria-hidden="true">💝</div>
         <h1 class="nq-title">${finalTitle}</h1>
-        <p class="nq-sub" style="margin-bottom: 24px;">${finalSub}</p>
-        <button id="nqOpen" class="btn nq-btn nq-green"${PREV?' disabled':''}>${btnText}</button>
+        <p class="nq-sub${animText}" style="margin-bottom: 24px;">${finalSub}</p>
+        <button id="nqOpen" class="btn nq-btn nq-green${animBtn}"${PREV?' disabled':''}>${btnText}</button>
         ${PREV ? `<div class="nq-hint" style="margin-top: 12px;">Preview only – button disabled</div>` : ``}
         
         <canvas id="nq-confetti-canvas" class="confetti-canvas"></canvas>
@@ -3344,8 +3369,11 @@ const showResult = () => {
     const finalTitle = hasGift ? copy.okTitle : "Okay, it's really you!";
     const finalSub = hasGift ? copy.okSub : "A real gift costs money, and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead. Love you! 🫶";
     
-    // הגדרת טקסט הכפתור
+    // הגדרת טקסט הכפתור ואנימציות
     let btnText = copy.okBtn;
+    const animText = !hasGift ? " troll-reveal-text" : "";
+    const animBtn = !hasGift ? " troll-reveal-btn" : "";
+    
     if (!hasGift) {
       btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Claim your REAL gift 🎁";
     }
@@ -3354,8 +3382,8 @@ const showResult = () => {
       <div class="wrap wrap-shake ${activeTheme !== 'dark' ? 'theme-' + activeTheme : ''}">
         <div class="sh-success-icon" aria-hidden="true">💝</div>
         <h1 class="sh-title">${finalTitle}</h1>
-        <p class="sh-sub" style="margin-bottom: 24px;">${finalSub}</p>
-        <button id="shOpen" class="btn sh-cta green"${PREV?' disabled':''}>${btnText}</button>
+        <p class="sh-sub${animText}" style="margin-bottom: 24px;">${finalSub}</p>
+        <button id="shOpen" class="btn sh-cta green${animBtn}"${PREV?' disabled':''}>${btnText}</button>
         ${ PREV ? `<div class="sh-sub" style="margin-top:12px;">Preview only – button disabled</div>` : `` }
         <canvas id="shConfetti2" class="confetti-canvas"></canvas>
       </div>

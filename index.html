@@ -1936,36 +1936,23 @@ function triggerTrollFart(btnElement) {
   });
 
   // 4. תזמון הפלוץ (נכוון ל-2.5 שניות מתחילת ה-GIF, איפה שהוא מתכופף)
-  setTimeout(() => {
-    // השמעת סאונד פלוץ
-    const fartAudio = new Audio('https://www.soundjay.com/human/sounds/fart-01.mp3'); 
-    fartAudio.play().catch(e => {});
-
-    // כל המסך רועד
-    document.body.classList.add('fart-shake');
-
-    // 5. השהייה נוספת כדי לתת ל-GIF לסיים את ה-6 שניות שלו לפני שהוא בורח
-    // (חיכינו כבר 2500ms, נחכה עוד 3500ms כדי להשלים ל-6000ms שזה 6 שניות)
+  // כפתור אדום אחרי 500ms (= 3 שניות מהקליק)
     setTimeout(() => {
-      document.body.classList.remove('fart-shake');
-      troll.querySelector('.troll-fart-img').style.transform = "scale(1) scaleX(-1)"; // מסתובב כדי לצאת
-      troll.classList.remove('walk-in');
-      troll.classList.add('walk-out'); // יוצא מהמסך
-
-      // שינוי הכפתור לפאנץ' הסופי (תוך שמירה על הצורה המקורית)
       btnElement.innerText = "I actually paid money to fart on your screen! Love you ❤️";
-      
-      // 1. מסירים רק את קלאס הצבע המקורי, שומרים על קלאס המבנה (כמו nq-btn)
       btnElement.classList.remove('green', 'nq-green', 'brand');
-      
-      // 2. כופים צבע אדום דרך inline-style כדי לדרוס ב-100% כל עיצוב אחר
       btnElement.style.setProperty('background', '#dc2626', 'important');
       btnElement.style.setProperty('color', '#ffffff', 'important');
       btnElement.style.setProperty('box-shadow', '0 4px 16px rgba(220, 38, 38, 0.4)', 'important');
       btnElement.style.setProperty('border', '1px solid rgba(255, 255, 255, 0.2)', 'important');
     }, 500);
 
-  }, 2500);
+    // טרול יוצא אחרי 3500ms (= 6 שניות מהקליק) — ה-GIF מסיים לרוץ
+    setTimeout(() => {
+      document.body.classList.remove('fart-shake');
+      troll.querySelector('.troll-fart-img').style.transform = "scale(1) scaleX(-1)";
+      troll.classList.remove('walk-in');
+      troll.classList.add('walk-out');
+    }, 3500);
 }
 
 // הצג סטטוס־בר רק בפריביו

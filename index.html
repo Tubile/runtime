@@ -1567,6 +1567,14 @@ const F = (qs.get('f')||'').trim(); // feature slug
 const NAME = (qs.get('name')||'Friend').trim();
 const GIFT = normalizeUrl(qs.get('giftUrl'));
 const PREV = (qs.get('preview')||'0').trim()==='1';
+
+// --- TROLL SCREEN GLOBAL PARAMS ---
+const TROLL_TITLE = (qs.get('trollTitle') || "Okay, it's really you!").trim().slice(0,80);
+const TROLL_SUB = (qs.get('trollSub') || "A real gift costs money, and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead. Love you! 🫶").trim().slice(0,180);
+const TROLL_BTN1 = (qs.get('trollBtn1') || "Gotcha 😂 Get your gift here").trim().slice(0,80);
+const TROLL_BTN2 = (qs.get('trollBtn2') || "Claiming gift...").trim().slice(0,80);
+const TROLL_BTN3 = (qs.get('trollBtn3') || "I actually paid money to fart on your screen! Love you ❤️").trim().slice(0,120);
+
 /* --- REACTION CAM LOGIC --- */
 const REACTION_ON = (qs.get('reaction') || '0') === '1';
 const SENDER = (qs.get('sender') || '').trim(); // שם השולח (או ריק)
@@ -1914,7 +1922,7 @@ function sfx(kind){
 function triggerTrollFart(btnElement) {
   // 1. ננטרל את הכפתור ונשנה טקסט זמני
   btnElement.disabled = true;
-  btnElement.innerText = "Claiming gift...";
+  btnElement.innerText = TROLL_BTN2;
   btnElement.style.opacity = "0.8";
 
   // 2. ניצור את הטרול אם הוא לא קיים
@@ -1938,7 +1946,7 @@ function triggerTrollFart(btnElement) {
   // 4. תזמון הפלוץ (נכוון ל-2.5 שניות מתחילת ה-GIF, איפה שהוא מתכופף)
   // כפתור אדום אחרי 500ms (= 3 שניות מהקליק)
     setTimeout(() => {
-      btnElement.innerText = "I actually paid money to fart on your screen! Love you ❤️";
+      btnElement.innerText = TROLL_BTN3;
       btnElement.classList.remove('green', 'nq-green', 'brand');
       btnElement.style.setProperty('background', '#dc2626', 'important');
       btnElement.style.setProperty('color', '#ffffff', 'important');
@@ -2359,8 +2367,8 @@ function captcha(){
     const hasGift = !!GIFT && GIFT !== '#';
     
     // הגדרת טקסטים בהתאם למסלול (מתנה או הטרלה)
-    const finalTitle = hasGift ? copy.okTitle : "Okay, it's really you!";
-    const finalSub = hasGift ? copy.okSub : "A real gift costs money... and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead 🫶";
+    const finalTitle = hasGift ? copy.okTitle : TROLL_TITLE;
+    const finalSub = hasGift ? copy.okSub : TROLL_SUB;
     
     // הגדרת טקסט הכפתור ואנימציות
     let btnText = copy.okBtn;
@@ -2368,7 +2376,7 @@ function captcha(){
     const animBtn = !hasGift ? " troll-reveal-btn" : "";
     
     if (!hasGift) {
-      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Gotcha 😂 Get your gift here";
+      btnText = REACTION_ON ? "Send your angry reaction 🤬" : TROLL_BTN1;
     }
 
     app.innerHTML = `
@@ -2636,15 +2644,15 @@ function infinite(){
       const hasGift = !!GIFT && GIFT !== '#';
       
       // הגדרת טקסטים ואנימציות בהתאם למסלול
-      const finalTitle = hasGift ? copy.earned : "Okay, it's really you!";
+      const finalTitle = hasGift ? copy.earned : TROLL_TITLE;
       const animText = !hasGift ? " troll-reveal-text" : "";
       const animBtn = !hasGift ? " troll-reveal-btn" : "";
-      const finalSub = hasGift ? "" : `<p class='sub${animText}' style='margin-bottom: 24px; font-size:16px; opacity:0.85'>A real gift costs money, and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead. Love you! 🫶</p>`;
+      const finalSub = hasGift ? "" : `<p class='sub${animText}' style='margin-bottom: 24px; font-size:16px; opacity:0.85'>${TROLL_SUB}</p>`;
       
       // הגדרת טקסט הכפתור
       let btnText = copy.btn8_success;
       if (!hasGift) {
-        btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Gotcha 😂 Get your gift here";
+        btnText = REACTION_ON ? "Send your angry reaction 🤬" : TROLL_BTN1;
       }
 
       inner.innerHTML = `
@@ -2952,8 +2960,8 @@ else { document.body.className = ''; }
     const hasGift = !!GIFT && GIFT !== '#';
     
     // הגדרת טקסטים בהתאם למסלול (מתנה או הטרלה)
-    const finalTitle = hasGift ? copy.okTitle : "Okay, it's really you!";
-    const finalSub = hasGift ? copy.okSub : "A real gift costs money, and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead. Love you! 🫶";
+    const finalTitle = hasGift ? copy.okTitle : TROLL_TITLE;
+    const finalSub = hasGift ? copy.okSub : TROLL_SUB;
     
     // הגדרת טקסט הכפתור ואנימציות
     let btnText = copy.okBtn;
@@ -2961,7 +2969,7 @@ else { document.body.className = ''; }
     const animBtn = !hasGift ? " troll-reveal-btn" : "";
     
     if (!hasGift) {
-      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Gotcha 😂 Get your gift here";
+      btnText = REACTION_ON ? "Send your angry reaction 🤬" : TROLL_BTN1;
     }
 
     // 2. Render HTML including the specific Canvas (Captcha Style)
@@ -3359,8 +3367,8 @@ const showResult = () => {
     const hasGift = !!GIFT && GIFT !== '#';
     
     // הגדרת טקסטים בהתאם למסלול (מתנה או הטרלה)
-    const finalTitle = hasGift ? copy.okTitle : "Okay, it's really you!";
-    const finalSub = hasGift ? copy.okSub : "A real gift costs money, and trolling you is priceless. I had no idea what to get you, so I figured I'd just waste your time instead. Love you! 🫶";
+    const finalTitle = hasGift ? copy.okTitle : TROLL_TITLE;
+    const finalSub = hasGift ? copy.okSub : TROLL_SUB;
     
     // הגדרת טקסט הכפתור ואנימציות
     let btnText = copy.okBtn;
@@ -3368,7 +3376,7 @@ const showResult = () => {
     const animBtn = !hasGift ? " troll-reveal-btn" : "";
     
     if (!hasGift) {
-      btnText = REACTION_ON ? "Send your angry reaction 🤬" : "Gotcha 😂 Get your gift here";
+      btnText = REACTION_ON ? "Send your angry reaction 🤬" : TROLL_BTN1;
     }
 
     app.innerHTML = `
